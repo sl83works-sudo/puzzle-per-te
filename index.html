@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puzzle per te!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <div class="stars">⭐ ⭐ ⭐</div>
+  <h1>Puzzle per te!</h1>
+  <p>Genera, stampa e gioca — con tanto amore 💛</p>
+</div>
+
+<div class="controls">
+  <button class="btn btn-type active" data-type="maze" onclick="setType('maze',this)">🌀 Labirinto</button>
+  <button class="btn btn-type" data-type="wordsearch" onclick="setType('wordsearch',this)">🔤 Cerca parole</button>
+  <button class="btn btn-type" data-type="differences" onclick="setType('differences',this)">🔍 Differenze</button>
+  <button class="btn btn-type" data-type="sudoku" onclick="setType('sudoku',this)">🔢 Sudoku</button>
+  <button class="btn btn-type" data-type="connect" onclick="setType('connect',this)">🔵 Unisci i punti</button>
+
+  <span class="diff-label">Difficoltà:</span>
+  <select id="difficulty">
+    <option value="easy">😊 Facile</option>
+    <option value="medium" selected>🤔 Medio</option>
+    <option value="hard">💪 Difficile</option>
+  </select>
+
+  <input type="text" id="nameInput" placeholder="Nome del bambino..." maxlength="20">
+  <button class="btn btn-gen" onclick="generate()">✨ Genera!</button>
+  <button class="btn btn-print" onclick="window.print()">🖨️ Stampa</button>
+</div>
+
+<div class="puzzle-area" id="puzzleArea">
+  <div class="empty-state">
+    <div class="emoji">🎮</div>
+    <p>Scegli un puzzle e premi "Genera!"</p>
+    <small>Poi stampa con un clic 🖨️</small>
+  </div>
+</div>
+
+<script src="puzzle.js"></script>
+</body>
+</html>
