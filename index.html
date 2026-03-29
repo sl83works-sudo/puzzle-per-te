@@ -17,17 +17,24 @@
 </div>
 
 <div class="controls">
-  <button class="btn btn-type active" data-type="maze" onclick="setType('maze',this)">🌀 Labirinto</button>
-  <button class="btn btn-type" data-type="wordsearch" onclick="setType('wordsearch',this)">🔤 Cerca parole</button>
-  <button class="btn btn-type" data-type="differences" onclick="setType('differences',this)">🔍 Differenze</button>
-  <button class="btn btn-type" data-type="sudoku" onclick="setType('sudoku',this)">🔢 Sudoku</button>
-  <button class="btn btn-type" data-type="connect" onclick="setType('connect',this)">🔵 Unisci i punti</button>
+  <button class="btn btn-type active" onclick="setType('maze',this)">🌀 Labirinto</button>
+  <button class="btn btn-type" onclick="setType('wordsearch',this)">🔤 Cerca parole</button>
+  <button class="btn btn-type" onclick="setType('differences',this)">🔍 Differenze</button>
+  <button class="btn btn-type" onclick="setType('sudoku',this)">🔢 Sudoku</button>
+  <button class="btn btn-type" onclick="setType('connect',this)">🔵 Unisci punti</button>
+  <button class="btn btn-type" onclick="setType('stickman',this)">🤸 Stickman</button>
+  <button class="btn btn-type" onclick="setType('colorbynumber',this)">🎨 Colora</button>
+  <button class="btn btn-type" onclick="setType('sequence',this)">🔗 Sequenza</button>
+  <button class="btn btn-type" onclick="setType('mirror',this)">🪞 Riflesso</button>
+  <button class="btn btn-type" onclick="setType('intruder',this)">👁️ Intruso</button>
+  <button class="btn btn-type" onclick="setType('pairs',this)">🤝 Coppie</button>
 
-  <span class="diff-label">Difficoltà:</span>
+  <span class="diff-label">Età:</span>
   <select id="difficulty">
-    <option value="easy">😊 Facile</option>
-    <option value="medium" selected>🤔 Medio</option>
-    <option value="hard">💪 Difficile</option>
+    <option value="explorer">🌱 3–5 anni</option>
+    <option value="curious" selected>🌟 6–8 anni</option>
+    <option value="growing">🚀 9–11 anni</option>
+    <option value="challenge">🧠 12+ anni</option>
   </select>
 
   <input type="text" id="nameInput" placeholder="Nome del bambino..." maxlength="20">
