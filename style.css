@@ -36,7 +36,7 @@ input[type=text] { font-family: 'Nunito', sans-serif; font-weight: 600; font-siz
 input[type=text]:focus { outline: none; border-color: var(--c-pink); }
 
 .puzzle-area { padding: 1.2rem; display: flex; flex-direction: column; align-items: center; gap: 1.2rem; min-height: 400px; }
-.puzzle-card { background: white; border-radius: 16px; border: 2px solid var(--c-border); box-shadow: 0 4px 20px var(--c-shadow); padding: 1.2rem; width: 100%; max-width: 640px; }
+.puzzle-card { background: white; border-radius: 16px; border: 2px solid var(--c-border); box-shadow: 0 4px 20px var(--c-shadow); padding: 1.2rem; width: 100%; max-width: 640px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .puzzle-title { font-family: 'Fredoka One', cursive; font-size: 1.2rem; color: var(--c-purple); margin-bottom: 0.3rem; }
 .puzzle-subtitle { font-size: 0.8rem; color: var(--c-muted); margin-bottom: 0.6rem; }
 .puzzle-name { font-size: 0.82rem; color: var(--c-pink); font-weight: 700; margin-bottom: 0.5rem; }
@@ -73,7 +73,9 @@ canvas { display: block; border-radius: 8px; border: 1.5px solid var(--c-border)
 .guide-close { font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 700; margin-top: 0.6rem; padding: 0.25rem 0.7rem; border-radius: 50px; border: 1px solid #ccc; background: white; cursor: pointer; color: var(--c-muted); display: block; }
 
 @media print {
+  @page { size: A4 landscape; margin: 10mm; }
   .controls, .header, .guide-btn, .parent-guide { display: none !important; }
-  .puzzle-card { box-shadow: none; border: 1.5px solid #ccc; page-break-after: always; }
   body { background: white; }
+  .puzzle-area { padding: 0; gap: 0; }
+  .puzzle-card { box-shadow: none; border: 1.5px solid #ccc; page-break-after: always; max-width: 100%; margin: 0 auto; border-radius: 0; align-items: center; }
 }
