@@ -67,6 +67,29 @@ canvas { display: block; border-radius: 8px; border: 1.5px solid var(--c-border)
 .sudoku-cell.box-right { border-right: 2px solid var(--c-text); }
 .sudoku-cell.box-bottom { border-bottom: 2px solid var(--c-text); }
 
+/* PUNTA E CONTA */
+.count-grid { display: flex; flex-direction: column; gap: 3px; }
+.count-grid-row { display: flex; gap: 3px; justify-content: center; }
+.count-cell { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; border: 1px solid var(--c-border); border-radius: 6px; background: #fafafa; }
+.count-target-box { margin-bottom: 0.8rem; font-weight: 700; color: var(--c-purple); font-size: 0.95rem; display: flex; align-items: center; justify-content: center; }
+.count-answer { margin-top: 0.8rem; font-size: 0.85rem; font-weight: 700; color: var(--c-muted); }
+.count-answer input { width: 50px; border: 2px solid var(--c-border); border-radius: 8px; padding: 3px 6px; text-align: center; font-weight: 700; font-family: 'Nunito', sans-serif; margin-left: 6px; }
+
+/* SEQUENZA DA RICORDARE */
+.sequence-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 0.8rem 0; }
+.sequence-item { width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; border: 2px solid var(--c-border); border-radius: 10px; background: #fafafa; }
+.sequence-item.empty { border-style: dashed; background: white; }
+
+/* PERCORSO GUIDATO */
+.path-rule { font-weight: 700; color: var(--c-purple); margin-bottom: 0.8rem; font-size: 0.95rem; }
+.path-grid { display: inline-grid; gap: 2px; background: var(--c-border); border: 2px solid var(--c-text); border-radius: 6px; overflow: hidden; padding: 2px; }
+.path-cell { display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; background: white; }
+.path-cell.start { background: #e3f7ec; color: #2f8b5c; font-family: 'Fredoka One', cursive; }
+.path-cell.end { background: #fdeaea; color: #c94b4b; font-family: 'Fredoka One', cursive; }
+
+/* SOLUZIONE PER IL GENITORE (comune a più schede) */
+.answer-key { margin-top: 1rem; font-size: 0.72rem; color: #c8bfa8; }
+
 /* GUIDA GENITORI */
 .guide-btn { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.75rem; padding: 0.3rem 0.8rem; border-radius: 50px; border: 1.5px solid var(--c-purple); background: white; color: var(--c-purple); cursor: pointer; margin-top: 0.8rem; }
 .guide-btn:hover { background: var(--c-purple); color: white; }
