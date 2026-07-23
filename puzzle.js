@@ -23,10 +23,13 @@ function generate() {
   var name = nameVal || '';
   rng = seededRandom(Date.now() % 999983);
   area.innerHTML = '';
-  if      (currentType === 'maze')   generateMaze(area, diff, name);
-  else if (currentType === 'words')  generateWordSearch(area, diff, name);
-  else if (currentType === 'sudoku') generateSudoku(area, diff, name);
-  else if (currentType === 'color')  generateColor(area, diff, name);
+  if      (currentType === 'maze')     generateMaze(area, diff, name);
+  else if (currentType === 'words')    generateWordSearch(area, diff, name);
+  else if (currentType === 'sudoku')   generateSudoku(area, diff, name);
+  else if (currentType === 'color')    generateColor(area, diff, name);
+  else if (currentType === 'count')    generateCount(area, diff, name);
+  else if (currentType === 'sequence') generateSequence(area, diff, name);
+  else if (currentType === 'path')     generatePath(area, diff, name);
 }
 
 function makeCard(title, subtitle, name) {
@@ -44,7 +47,10 @@ var parentGuides = {
   maze: 'Il labirinto allena la pianificazione visiva, la perseveranza e il controllo dell\'impulsività. Suggerite al bambino di "guardare tutto" prima di iniziare. Se si blocca: "Prova a tornare indietro". Per bambini con ADHD lavorate su un labirinto alla volta e celebrate ogni vicolo cieco come esperienza di apprendimento.',
   words: 'Il cerca parole allena la discriminazione visiva e la concentrazione selettiva. Suggerite di cercare una parola alla volta, scandendo le lettere ad alta voce. Per bambini con DSA potete coprire parte della griglia con un foglio bianco per ridurre il carico visivo.',
   sudoku: 'Il sudoku sviluppa ragionamento logico e memoria di lavoro. Partite dai quadrati con più numeri già inseriti. Rassicurate il bambino: non ci sono calcoli, solo logica.',
-  color: 'Colorare liberamente stimola creatività, concentrazione e motricità fine. Lasciate il bambino libero di scegliere i colori senza correggerlo. Usate la pagina come spunto: "Cosa sta facendo il dinosauro?" aiuta a sviluppare il linguaggio e la narrazione.'
+  color: 'Colorare liberamente stimola creatività, concentrazione e motricità fine. Lasciate il bambino libero di scegliere i colori senza correggerlo. Usate la pagina come spunto: "Cosa sta facendo il dinosauro?" aiuta a sviluppare il linguaggio e la narrazione.',
+  count: 'Questa scheda allena l\'attenzione sostenuta e la discriminazione visiva: il bambino deve scandire l\'intera griglia senza saltare celle. Suggerite di procedere riga per riga, magari usando un dito o una matita come guida, invece di "cercare a occhio" in modo disordinato. Per bambini con ADHD è utile far segnare ogni simbolo trovato con un puntino leggero, così il conteggio resta tracciabile anche se l\'attenzione si interrompe.',
+  sequence: 'Questa scheda allena la memoria di lavoro visiva, cioè la capacità di trattenere un\'informazione per il tempo necessario a riutilizzarla. Lasciate che il bambino osservi la prima pagina per un tempo libero (non cronometrato la prima volta), poi giri pagina da solo. Se sbaglia l\'ordine non è un errore da correggere subito: chiedete "quale ricordi per primo?" per allenare la strategia, non solo il risultato.',
+  path: 'Questa scheda allena la pianificazione motoria e lo scanning visivo guidato da una regola. È importante che il bambino comprenda la regola PRIMA di iniziare a tracciare: fatevela ripetere a voce con parole sue. Per bambini con difficoltà di pianificazione, permettete di seguire il percorso con il dito prima di tracciarlo con la matita.'
 };
 
 function showGuide(type) {
@@ -85,7 +91,24 @@ function generateMaze(area, diff, name) {
     var dirs=[N,S,E,W];dirs.sort(function(){return rng()-0.5;});
     for(var i=0;i<dirs.length;i++){var d=dirs[i],nx=x+dx[d],ny=y+dy[d];if(nx>=0&&nx<w&&ny>=0&&ny<h&&!visited[ny][nx]){grid[y][x]&=~d;grid[ny][nx]&=~opp[d];carve(nx,ny);}}
   }
-  carve(0,0);
+
+  /* NUOVO: entrata/uscita su angoli randomizzati (4 combinazioni possibili)
+     invece di sempre alto-sinistra -> basso-destra. Seconda fonte di
+     variabilita' richiesta dalla Regola di Randomizzazione. */
+  var cornerDefs = {
+    TL: { x:0,   y:0,   side:'left'   },
+    TR: { x:w-1, y:0,   side:'top'    },
+    BL: { x:0,   y:h-1, side:'bottom' },
+    BR: { x:w-1, y:h-1, side:'right'  }
+  };
+  var diagonals = [ ['TL','BR'], ['TR','BL'] ];
+  var pair = diagonals[Math.floor(rng()*2)];
+  if (rng() < 0.5) { pair = [pair[1], pair[0]]; }
+  var startC = cornerDefs[pair[0]];
+  var endC   = cornerDefs[pair[1]];
+
+  carve(startC.x, startC.y);
+
   var pad=10;
   var cvs=document.createElement('canvas');
   cvs.width=w*cellSize+pad*2; cvs.height=h*cellSize+pad*2;
@@ -100,10 +123,22 @@ function generateMaze(area, diff, name) {
     if(x===w-1){ctx.beginPath();ctx.moveTo(px+cellSize,py);ctx.lineTo(px+cellSize,py+cellSize);ctx.stroke();}
     if(y===h-1){ctx.beginPath();ctx.moveTo(px,py+cellSize);ctx.lineTo(px+cellSize,py+cellSize);ctx.stroke();}
   }
-  ctx.clearRect(pad,pad,2,cellSize);
-  ctx.clearRect(pad+(w-1)*cellSize,pad+(h-1)*cellSize,2,cellSize+2);
-  ctx.fillStyle='#4caf7d';ctx.font='bold 11px sans-serif';ctx.fillText('GO',pad+1,pad+cellSize-4);
-  ctx.fillStyle='#e04f4f';ctx.fillText('OK',pad+(w-1)*cellSize,pad+(h-1)*cellSize+cellSize-3);
+
+  function clearOpening(cnr) {
+    var opx = cnr.x*cellSize+pad, opy = cnr.y*cellSize+pad;
+    if (cnr.side==='left')   ctx.clearRect(opx, opy, 2, cellSize);
+    else if (cnr.side==='right')  ctx.clearRect(opx+cellSize-2, opy, 2, cellSize);
+    else if (cnr.side==='top')    ctx.clearRect(opx, opy, cellSize, 2);
+    else if (cnr.side==='bottom') ctx.clearRect(opx, opy+cellSize-2, cellSize, 2);
+  }
+  clearOpening(startC);
+  clearOpening(endC);
+
+  var sLabelX = startC.x*cellSize+pad+1, sLabelY = startC.y*cellSize+pad+cellSize-4;
+  var eLabelX = endC.x*cellSize+pad+1,   eLabelY = endC.y*cellSize+pad+cellSize-4;
+  ctx.fillStyle='#4caf7d';ctx.font='bold 11px sans-serif';ctx.fillText('GO',sLabelX,sLabelY);
+  ctx.fillStyle='#e04f4f';ctx.fillText('OK',eLabelX,eLabelY);
+
   var card=makeCard('Labirinto',"Trova la via d'uscita! (GO = inizio, OK = fine)",name);
   card.appendChild(cvs);addGuideBtn(card,'maze');area.appendChild(card);
 }
@@ -209,5 +244,212 @@ function generateColor(area, diff, name) {
   img.src = src;
 
   addGuideBtn(card, 'color');
+  area.appendChild(card);
+}
+
+/* ==================== PUNTA E CONTA ====================
+   Fonti di variabilita': pool di 30 simboli + posizionamento
+   generativo + dimensioni griglia/numero simboli distinti per fascia. */
+function generateCount(area, diff, name) {
+  var symbolPool = ['🐶','🐱','🐰','🦊','🐻','🐼','🐸','🐵','🦁','🐷','🐨','🐯','🦉','🐢','🐳','⭐','🌸','🍎','🍊','🍇','🌙','☀️','⚽','🎈','🚗','🚀','❤️','🔵','🟢','🟡'];
+  var gridCfg = {
+    explorer: { rows:5, cols:5, distinct:3 },
+    curious:  { rows:6, cols:7, distinct:4 },
+    growing:  { rows:7, cols:8, distinct:5 },
+    challenge:{ rows:8, cols:10,distinct:6 }
+  };
+  var cfg = gridCfg[diff] || gridCfg.curious;
+
+  var shuffled = symbolPool.slice().sort(function(){ return rng()-0.5; });
+  var chosen = shuffled.slice(0, cfg.distinct);
+  var target = chosen[Math.floor(rng()*chosen.length)];
+
+  var grid=[], r, c, sym, targetCount=0;
+  for (r=0;r<cfg.rows;r++){
+    var row=[];
+    for (c=0;c<cfg.cols;c++){
+      sym = chosen[Math.floor(rng()*chosen.length)];
+      if (sym===target) targetCount++;
+      row.push(sym);
+    }
+    grid.push(row);
+  }
+  if (targetCount < 2) {
+    var need = 2 - targetCount;
+    for (var k=0;k<need;k++){
+      var rr=Math.floor(rng()*cfg.rows), cc=Math.floor(rng()*cfg.cols);
+      if (grid[rr][cc] !== target) { grid[rr][cc]=target; targetCount++; }
+    }
+  }
+
+  var container=document.createElement('div'); container.className='count-grid';
+  for (r=0;r<cfg.rows;r++){
+    var rowDiv=document.createElement('div'); rowDiv.className='count-grid-row';
+    for (c=0;c<cfg.cols;c++){
+      var cell=document.createElement('div'); cell.className='count-cell'; cell.textContent=grid[r][c];
+      rowDiv.appendChild(cell);
+    }
+    container.appendChild(rowDiv);
+  }
+
+  var targetBox=document.createElement('div'); targetBox.className='count-target-box';
+  targetBox.innerHTML = 'Quante volte trovi questo simbolo? <span style="font-size:1.5rem;margin-left:6px;">'+target+'</span>';
+
+  var answerBox=document.createElement('div'); answerBox.className='count-answer';
+  answerBox.innerHTML = 'Scrivi qui il numero: <input type="text" maxlength="3">';
+
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzione per il genitore: ' + targetCount;
+
+  var card=makeCard('Punta e conta','Osserva bene la griglia e conta con attenzione, riga per riga!',name);
+  card.appendChild(targetBox);
+  card.appendChild(container);
+  card.appendChild(answerBox);
+  card.appendChild(key);
+  addGuideBtn(card,'count');
+  area.appendChild(card);
+}
+
+/* ==================== SEQUENZA DA RICORDARE ====================
+   Fonti di variabilita': pool di 18 simboli + lunghezza sequenza
+   variabile per fascia + ordine sempre nuovo. Genera due schede
+   (osservazione + richiamo) che si stampano su due pagine separate. */
+function generateSequence(area, diff, name) {
+  var symbolPool = ['🔴','🔵','🟢','🟡','🟣','⭐','❤️','🔺','⬛','⬜','🍀','🌙','☀️','🐾','🎵','✳️','🔶','🔷'];
+  var lengthCfg = { explorer:4, curious:6, growing:8, challenge:10 };
+  var len = lengthCfg[diff] || 6;
+
+  var shuffled = symbolPool.slice().sort(function(){ return rng()-0.5; });
+  var seq=[], i;
+  for (i=0;i<len;i++){ seq.push(shuffled[i % shuffled.length]); }
+  seq = seq.sort(function(){ return rng()-0.5; });
+
+  var card1=makeCard('Sequenza da ricordare','Osserva bene questa sequenza con calma, poi gira pagina e prova a ricordarla!',name);
+  var row1=document.createElement('div'); row1.className='sequence-row';
+  for (i=0;i<len;i++){
+    var item=document.createElement('div'); item.className='sequence-item'; item.textContent=seq[i];
+    row1.appendChild(item);
+  }
+  card1.appendChild(row1);
+  addGuideBtn(card1,'sequence');
+  area.appendChild(card1);
+
+  var card2=makeCard('Ora scrivila a memoria!','Disegna o scrivi i simboli nell\'ordine in cui li ricordi, nelle caselle qui sotto.',name);
+  var row2=document.createElement('div'); row2.className='sequence-row';
+  for (i=0;i<len;i++){
+    var empty=document.createElement('div'); empty.className='sequence-item empty';
+    row2.appendChild(empty);
+  }
+  card2.appendChild(row2);
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Sequenza originale per il genitore: ' + seq.join(' ');
+  card2.appendChild(key);
+  addGuideBtn(card2,'sequence');
+  area.appendChild(card2);
+}
+
+/* ==================== PERCORSO GUIDATO ====================
+   Fonti di variabilita': percorso generato con random-walk (sempre
+   diverso) + pool di 3 tipi di regola (colore / frecce / numeri) +
+   parametro della regola scelto a caso (colore target, direzione). */
+function generatePath(area, diff, name) {
+  var gridCfg = { explorer:6, curious:8, growing:10, challenge:12 };
+  var size = gridCfg[diff] || 8;
+  var w=size, h=size;
+
+  var path=[];
+  var y = Math.floor(rng()*h);
+  var x = 0;
+  path.push({x:x,y:y});
+  while (x < w-1) {
+    var choice, roll = rng();
+    if (roll < 0.55) { choice='right'; }
+    else {
+      var opts=['right'];
+      if (y>0) opts.push('up');
+      if (y<h-1) opts.push('down');
+      choice = opts[Math.floor(rng()*opts.length)];
+    }
+    if (choice==='right') { x++; }
+    else if (choice==='up') { y--; }
+    else if (choice==='down') { y++; }
+    path.push({x:x,y:y});
+  }
+
+  var pathSet={}, pi;
+  for (pi=0;pi<path.length;pi++){ pathSet[path[pi].x+'_'+path[pi].y]=pi; }
+
+  var ruleType = Math.floor(rng()*3);
+  var colorPalette=['#e05f8e','#4a90d9','#4caf7d','#f47c2f','#7c5cbf','#c99a2e'];
+  var targetColor = colorPalette[Math.floor(rng()*colorPalette.length)];
+  var arrowChars={ right:'➡️', up:'⬆️', down:'⬇️' };
+  var ruleText='';
+
+  var grid=[], r, c;
+  for (r=0;r<h;r++){
+    var row=[];
+    for (c=0;c<w;c++){ row.push({}); }
+    grid.push(row);
+  }
+
+  if (ruleType===0) {
+    ruleText = 'Segui solo i pallini di questo colore, dalla S alla E: <span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:'+targetColor+';vertical-align:middle;margin-left:4px;"></span>';
+    for (r=0;r<h;r++) for (c=0;c<w;c++){
+      var k1=c+'_'+r;
+      if (pathSet.hasOwnProperty(k1)) { grid[r][c].symbol='●'; grid[r][c].color=targetColor; }
+      else { grid[r][c].symbol='●'; grid[r][c].color=colorPalette[Math.floor(rng()*colorPalette.length)]; }
+    }
+  } else if (ruleType===1) {
+    ruleText = 'Segui le frecce dalla partenza (S) fino all\'arrivo (E)!';
+    for (pi=0;pi<path.length-1;pi++){
+      var cur=path[pi], next=path[pi+1];
+      var dir = next.x>cur.x ? 'right' : (next.y<cur.y ? 'up' : 'down');
+      grid[cur.y][cur.x].symbol = arrowChars[dir];
+      grid[cur.y][cur.x].color = '#2d2416';
+    }
+    grid[path[path.length-1].y][path[path.length-1].x].symbol='🏁';
+    grid[path[path.length-1].y][path[path.length-1].x].color='#2d2416';
+    var dirsAll=['right','up','down'];
+    for (r=0;r<h;r++) for (c=0;c<w;c++){
+      if (!grid[r][c].symbol) { grid[r][c].symbol=arrowChars[dirsAll[Math.floor(rng()*3)]]; grid[r][c].color='#8a7a60'; }
+    }
+  } else {
+    ruleText = 'Collega i numeri in ordine crescente da 1 a '+path.length+', partendo dalla S!';
+    for (pi=0;pi<path.length;pi++){
+      grid[path[pi].y][path[pi].x].symbol = String(pi+1);
+      grid[path[pi].y][path[pi].x].color = '#2d2416';
+    }
+    for (r=0;r<h;r++) for (c=0;c<w;c++){
+      if (!grid[r][c].symbol) {
+        var randNum = Math.floor(rng()*(path.length*2))+1;
+        grid[r][c].symbol = String(randNum);
+        grid[r][c].color = '#8a7a60';
+      }
+    }
+  }
+
+  var container=document.createElement('div'); container.className='path-grid';
+  container.style.gridTemplateColumns = 'repeat(' + w + ', 32px)';
+  container.style.gridTemplateRows = 'repeat(' + h + ', 32px)';
+  for (r=0;r<h;r++){
+    for (c=0;c<w;c++){
+      var cell=document.createElement('div'); cell.className='path-cell';
+      var isStart = (c===path[0].x && r===path[0].y);
+      var isEnd = (c===path[path.length-1].x && r===path[path.length-1].y);
+      if (isStart) { cell.classList.add('start'); cell.textContent='S'; }
+      else if (isEnd) { cell.classList.add('end'); cell.textContent='E'; }
+      else {
+        cell.textContent = grid[r][c].symbol;
+        cell.style.color = grid[r][c].color;
+      }
+      container.appendChild(cell);
+    }
+  }
+
+  var ruleDiv=document.createElement('div'); ruleDiv.className='path-rule'; ruleDiv.innerHTML=ruleText;
+  var card=makeCard('Percorso guidato','Trova il percorso corretto seguendo la regola qui sotto!',name);
+  card.appendChild(ruleDiv);
+  card.appendChild(container);
+  addGuideBtn(card,'path');
   area.appendChild(card);
 }
