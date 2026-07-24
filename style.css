@@ -14,7 +14,6 @@ body { font-family: 'Nunito', sans-serif; background: var(--c-bg); color: var(--
 .header { background: linear-gradient(135deg,#fff9e6 0%,#ffefd4 50%,#fff0f6 100%); border-bottom: 2px solid var(--c-border); padding: 1.2rem 2rem 0.8rem; text-align: center; }
 .header h1 { font-family: 'Fredoka One', cursive; font-size: 2rem; color: var(--c-orange); letter-spacing: 1px; }
 .header p { font-size: 0.9rem; color: var(--c-muted); margin-top: 0.2rem; }
-.stars { font-size: 1rem; margin-bottom: 0.2rem; letter-spacing: 4px; }
 
 /* CONTROLS */
 .controls { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.8rem 1rem; background: white; border-bottom: 1px solid var(--c-border); align-items: center; justify-content: center; }
