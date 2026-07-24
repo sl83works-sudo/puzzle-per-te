@@ -74,6 +74,47 @@ function addGuideBtn(card, type) {
   card.appendChild(gb);
 }
 
+/* ==================== ADATTAMENTO A PIENA PAGINA IN STAMPA ====================
+   Ogni generatore avvolge il proprio contenuto "visivo" principale (canvas,
+   griglia, immagine...) in una coppia .print-scale-content > .print-scale-inner.
+   Al momento della stampa calcoliamo lo spazio disponibile e ingrandiamo il
+   contenuto con transform:scale() cosi' che riempia l'intero foglio A4,
+   invece di lasciare grandi zone bianche. Dopo la stampa il fattore viene
+   azzerato per non alterare la vista a schermo. */
+function makePrintWrap() {
+  var outer = document.createElement('div');
+  outer.className = 'print-scale-content';
+  var inner = document.createElement('div');
+  inner.className = 'print-scale-inner';
+  outer.appendChild(inner);
+  return { outer: outer, inner: inner };
+}
+
+function fitPrintScale() {
+  var wraps = document.querySelectorAll('.print-scale-content');
+  for (var i = 0; i < wraps.length; i++) {
+    var outer = wraps[i];
+    var inner = outer.querySelector('.print-scale-inner');
+    if (!inner) continue;
+    inner.style.transform = 'none';
+    var ow = outer.clientWidth, oh = outer.clientHeight;
+    var iw = inner.scrollWidth, ih = inner.scrollHeight;
+    if (ow <= 0 || oh <= 0 || iw <= 0 || ih <= 0) continue;
+    var scale = Math.min(ow / iw, oh / ih);
+    if (scale > 5) scale = 5;
+    if (scale < 0.1) scale = 0.1;
+    inner.style.transform = 'scale(' + scale + ')';
+  }
+}
+
+function resetPrintScale() {
+  var inners = document.querySelectorAll('.print-scale-inner');
+  for (var i = 0; i < inners.length; i++) inners[i].style.transform = 'none';
+}
+
+window.onbeforeprint = fitPrintScale;
+window.onafterprint = resetPrintScale;
+
 /* ==================== LABIRINTO ==================== */
 function generateMaze(area, diff, name) {
   var sizes = { explorer:9, curious:13, growing:17, challenge:23 };
@@ -140,7 +181,8 @@ function generateMaze(area, diff, name) {
   ctx.fillStyle='#e04f4f';ctx.fillText('OK',eLabelX,eLabelY);
 
   var card=makeCard('Labirinto',"Trova la via d'uscita! (GO = inizio, OK = fine)",name);
-  card.appendChild(cvs);addGuideBtn(card,'maze');area.appendChild(card);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(cvs); card.appendChild(wrap.outer);
+  addGuideBtn(card,'maze');area.appendChild(card);
 }
 
 /* ==================== CERCA PAROLE ==================== */
@@ -184,7 +226,8 @@ function generateWordSearch(area, diff, name) {
   var wordListDiv=document.createElement('div');wordListDiv.className='wordlist';
   for(wi=0;wi<allWords.length;wi++){var chip=document.createElement('span');chip.className='word-chip';chip.textContent=allWords[wi];wordListDiv.appendChild(chip);}
   var card=makeCard('Cerca le parole','Trova tutte le parole elencate qui sotto nella griglia!',name);
-  card.appendChild(container);card.appendChild(wordListDiv);addGuideBtn(card,'words');area.appendChild(card);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+  card.appendChild(wordListDiv);addGuideBtn(card,'words');area.appendChild(card);
 }
 
 /* ==================== SUDOKU ==================== */
@@ -208,7 +251,8 @@ function generateSudoku(area, diff, name) {
     container.appendChild(cell);
   }
   var card=makeCard('Sudoku','Ogni numero da 1 a 9 deve comparire una sola volta per riga, colonna e quadrato 3x3.',name);
-  card.appendChild(container);addGuideBtn(card,'sudoku');area.appendChild(card);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+  addGuideBtn(card,'sudoku');area.appendChild(card);
 }
 
 /* ==================== COLORA LIBERAMENTE ==================== */
@@ -226,16 +270,18 @@ function generateColor(area, diff, name) {
 
   var card = makeCard('Colora liberamente', 'Usa matite o pennarelli e colora come preferisci!', name);
 
+  var wrap = makePrintWrap();
   var loading = document.createElement('div');
   loading.style.cssText = 'padding:2rem;color:#8a7a60;font-size:0.9rem;font-weight:700;';
   loading.textContent = 'Caricamento immagine...';
-  card.appendChild(loading);
+  wrap.inner.appendChild(loading);
+  card.appendChild(wrap.outer);
 
   var img = new Image();
   img.onload = function() {
     loading.remove();
     img.style.cssText = 'max-width:100%;border-radius:8px;border:1.5px solid #e8e0d0;display:block;';
-    card.insertBefore(img, card.querySelector('.guide-btn'));
+    wrap.inner.appendChild(img);
   };
   img.onerror = function() {
     loading.textContent = 'Immagine non trovata. Controlla che il file ' + src + ' esista nella cartella /images/color/.';
@@ -303,7 +349,7 @@ function generateCount(area, diff, name) {
 
   var card=makeCard('Punta e conta','Osserva bene la griglia e conta con attenzione, riga per riga!',name);
   card.appendChild(targetBox);
-  card.appendChild(container);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
   card.appendChild(answerBox);
   card.appendChild(key);
   addGuideBtn(card,'count');
@@ -312,8 +358,11 @@ function generateCount(area, diff, name) {
 
 /* ==================== SEQUENZA DA RICORDARE ====================
    Fonti di variabilita': pool di 18 simboli + lunghezza sequenza
-   variabile per fascia + ordine sempre nuovo. Genera due schede
-   (osservazione + richiamo) che si stampano su due pagine separate. */
+   variabile per fascia + ordine sempre nuovo. Genera UNA sola scheda
+   divisa in due meta' uguali (sopra: sequenza da osservare; sotto:
+   caselle vuote da riempire a memoria) separate da una linea
+   tratteggiata: il genitore piega il foglio esattamente su quella
+   linea, cosi' si stampa un solo foglio invece di due. */
 function generateSequence(area, diff, name) {
   var symbolPool = ['🔴','🔵','🟢','🟡','🟣','⭐','❤️','🔺','⬛','⬜','🍀','🌙','☀️','🐾','🎵','✳️','🔶','🔷'];
   var lengthCfg = { explorer:4, curious:6, growing:8, challenge:10 };
@@ -324,28 +373,48 @@ function generateSequence(area, diff, name) {
   for (i=0;i<len;i++){ seq.push(shuffled[i % shuffled.length]); }
   seq = seq.sort(function(){ return rng()-0.5; });
 
-  var card1=makeCard('Sequenza da ricordare','Osserva bene questa sequenza con calma, poi gira pagina e prova a ricordarla!',name);
+  var card=makeCard('Sequenza da ricordare','Osserva la parte in alto, poi piega il foglio lungo la riga tratteggiata e riscrivi la sequenza a memoria in basso!',name);
+
+  var foldWrap=document.createElement('div'); foldWrap.className='sequence-fold-wrap';
+
+  var topHalf=document.createElement('div'); topHalf.className='sequence-half';
+  var topLabel=document.createElement('div'); topLabel.className='sequence-label'; topLabel.textContent='👀 Osserva e memorizza:';
+  var topWrap=makePrintWrap();
   var row1=document.createElement('div'); row1.className='sequence-row';
   for (i=0;i<len;i++){
     var item=document.createElement('div'); item.className='sequence-item'; item.textContent=seq[i];
     row1.appendChild(item);
   }
-  card1.appendChild(row1);
-  addGuideBtn(card1,'sequence');
-  area.appendChild(card1);
+  topWrap.inner.appendChild(row1);
+  topHalf.appendChild(topLabel);
+  topHalf.appendChild(topWrap.outer);
 
-  var card2=makeCard('Ora scrivila a memoria!','Disegna o scrivi i simboli nell\'ordine in cui li ricordi, nelle caselle qui sotto.',name);
+  var divider=document.createElement('div'); divider.className='sequence-divider';
+  divider.innerHTML='<span>✂️ piega qui</span>';
+
+  var bottomHalf=document.createElement('div'); bottomHalf.className='sequence-half';
+  var bottomLabel=document.createElement('div'); bottomLabel.className='sequence-label'; bottomLabel.textContent='✏️ Scrivila a memoria:';
+  var bottomWrap=makePrintWrap();
   var row2=document.createElement('div'); row2.className='sequence-row';
   for (i=0;i<len;i++){
     var empty=document.createElement('div'); empty.className='sequence-item empty';
     row2.appendChild(empty);
   }
-  card2.appendChild(row2);
+  bottomWrap.inner.appendChild(row2);
+  bottomHalf.appendChild(bottomLabel);
+  bottomHalf.appendChild(bottomWrap.outer);
+
+  foldWrap.appendChild(topHalf);
+  foldWrap.appendChild(divider);
+  foldWrap.appendChild(bottomHalf);
+  card.appendChild(foldWrap);
+
   var key=document.createElement('div'); key.className='answer-key';
   key.textContent = 'Sequenza originale per il genitore: ' + seq.join(' ');
-  card2.appendChild(key);
-  addGuideBtn(card2,'sequence');
-  area.appendChild(card2);
+  card.appendChild(key);
+
+  addGuideBtn(card,'sequence');
+  area.appendChild(card);
 }
 
 /* ==================== PERCORSO GUIDATO ====================
@@ -449,7 +518,7 @@ function generatePath(area, diff, name) {
   var ruleDiv=document.createElement('div'); ruleDiv.className='path-rule'; ruleDiv.innerHTML=ruleText;
   var card=makeCard('Percorso guidato','Trova il percorso corretto seguendo la regola qui sotto!',name);
   card.appendChild(ruleDiv);
-  card.appendChild(container);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
   addGuideBtn(card,'path');
   area.appendChild(card);
 }
