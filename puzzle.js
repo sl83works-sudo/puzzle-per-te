@@ -30,6 +30,8 @@ function generate() {
   else if (currentType === 'count')    generateCount(area, diff, name);
   else if (currentType === 'sequence') generateSequence(area, diff, name);
   else if (currentType === 'path')     generatePath(area, diff, name);
+  else if (currentType === 'cancel')   generateCancel(area, diff, name);
+  else if (currentType === 'rule')     generateRule(area, diff, name);
 }
 
 function makeCard(title, subtitle, name) {
@@ -50,7 +52,9 @@ var parentGuides = {
   color: 'Colorare liberamente stimola creatività, concentrazione e motricità fine. Lasciate il bambino libero di scegliere i colori senza correggerlo. Usate la pagina come spunto: "Cosa sta facendo il dinosauro?" aiuta a sviluppare il linguaggio e la narrazione.',
   count: 'Questa scheda allena l\'attenzione sostenuta e la discriminazione visiva: il bambino deve scandire l\'intera griglia senza saltare celle. Suggerite di procedere riga per riga, magari usando un dito o una matita come guida, invece di "cercare a occhio" in modo disordinato. Per bambini con ADHD è utile far segnare ogni simbolo trovato con un puntino leggero, così il conteggio resta tracciabile anche se l\'attenzione si interrompe.',
   sequence: 'Questa scheda allena la memoria di lavoro visiva, cioè la capacità di trattenere un\'informazione per il tempo necessario a riutilizzarla. Lasciate che il bambino osservi la prima pagina per un tempo libero (non cronometrato la prima volta), poi giri pagina da solo. Se sbaglia l\'ordine non è un errore da correggere subito: chiedete "quale ricordi per primo?" per allenare la strategia, non solo il risultato.',
-  path: 'Questa scheda allena la pianificazione motoria e lo scanning visivo guidato da una regola. È importante che il bambino comprenda la regola PRIMA di iniziare a tracciare: fatevela ripetere a voce con parole sue. Per bambini con difficoltà di pianificazione, permettete di seguire il percorso con il dito prima di tracciarlo con la matita.'
+  path: 'Questa scheda allena la pianificazione motoria e lo scanning visivo guidato da una regola. È importante che il bambino comprenda la regola PRIMA di iniziare a tracciare: fatevela ripetere a voce con parole sue. Per bambini con difficoltà di pianificazione, permettete di seguire il percorso con il dito prima di tracciarlo con la matita.',
+  cancel: 'Questa scheda allena l\'attenzione selettiva e il controllo inibitorio: il bambino deve ignorare tutti gli elementi che assomigliano al bersaglio ma non lo sono del tutto (stessa forma ma colore diverso, o viceversa). Fatevi ripetere la regola a voce prima di iniziare, per essere sicuri l\'abbia capita. Per bambini con ADHD è utile far segnare con una matita leggera ogni elemento appena trovato, così il conteggio resta tracciabile anche se l\'attenzione si interrompe. Nella variante "cerchia tutto tranne..." si allena anche l\'inibizione di una risposta automatica.',
+  rule: 'Questa scheda allena il ragionamento induttivo: il bambino deve scoprire da solo la logica nascosta in una sequenza, senza che gliela spieghiate prima. Lasciatelo formulare un\'ipotesi ad alta voce ("secondo me viene dopo...") prima di guardare le opzioni. Se sbaglia, non correggete subito: chiedete "cosa ti ha fatto pensare a quella risposta?" per allenare la strategia di ragionamento, non solo il risultato finale.'
 };
 
 function showGuide(type) {
@@ -520,5 +524,257 @@ function generatePath(area, diff, name) {
   card.appendChild(ruleDiv);
   var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
   addGuideBtn(card,'path');
+  area.appendChild(card);
+}
+
+/* ==================== CANCELLAZIONE SELETTIVA ====================
+   Motore di regole: pool di forme x pool di colori, tipo di regola
+   scelto a caso tra 4 (colore singolo / forma singola / combinazione
+   forma+colore / negazione), con bersaglio scelto a caso ad ogni
+   generazione. Fonti di variabilita': generativa (forma+colore casuali
+   per cella) + pool ampio di combinazioni possibili + la regola stessa
+   e' randomizzata, non fissa. Fasce piu' giovani usano solo regole a
+   singolo attributo; le fasce piu' grandi anche congiunzione/negazione. */
+function generateCancel(area, diff, name) {
+  var shapesPool = ['●','■','▲','★','♥'];
+  var colorPalette = ['#e05f8e','#4a90d9','#4caf7d','#f47c2f','#7c5cbf','#c99a2e'];
+  var gridCfg = {
+    explorer:  { rows:5, cols:5,  shapes:2, colors:3, rules:[1,2] },
+    curious:   { rows:6, cols:7,  shapes:3, colors:3, rules:[1,2] },
+    growing:   { rows:7, cols:8,  shapes:3, colors:4, rules:[0,1,2] },
+    challenge: { rows:8, cols:10, shapes:4, colors:5, rules:[0,3] }
+  };
+  var cfg = gridCfg[diff] || gridCfg.curious;
+
+  var shapes = shapesPool.slice(0, cfg.shapes);
+  var colorsShuffled = colorPalette.slice().sort(function(){ return rng()-0.5; });
+  var colors = colorsShuffled.slice(0, cfg.colors);
+
+  var ruleType = cfg.rules[Math.floor(rng()*cfg.rules.length)];
+  var targetShape = shapes[Math.floor(rng()*shapes.length)];
+  var targetColor = colors[Math.floor(rng()*colors.length)];
+
+  function isMatch(s, col) {
+    if (ruleType===0) return (s===targetShape && col===targetColor);
+    if (ruleType===1) return (col===targetColor);
+    if (ruleType===2) return (s===targetShape);
+    return !(s===targetShape && col===targetColor);
+  }
+
+  var swatchHtml = '<span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:'+targetColor+';vertical-align:middle;margin:0 3px;"></span>';
+  var shapeHtml = '<span style="color:'+targetColor+';font-size:1.2rem;vertical-align:middle;">'+targetShape+'</span>';
+  var shapeHtmlPlain = '<span style="font-size:1.2rem;vertical-align:middle;">'+targetShape+'</span>';
+  var ruleText;
+  if (ruleType===0)      ruleText = 'Cerchia SOLO le forme uguali a questa: ' + shapeHtml;
+  else if (ruleType===1) ruleText = 'Cerchia tutte le forme di questo colore, di qualsiasi tipo: ' + swatchHtml;
+  else if (ruleType===2) ruleText = 'Cerchia tutte le forme uguali a questa, di qualsiasi colore: ' + shapeHtmlPlain;
+  else                    ruleText = 'Cerchia TUTTO tranne le forme uguali a questa: ' + shapeHtml;
+
+  var grid=[], r, cx;
+  for (r=0;r<cfg.rows;r++){
+    var row=[];
+    for (cx=0;cx<cfg.cols;cx++){
+      var s = shapes[Math.floor(rng()*shapes.length)];
+      var col = colors[Math.floor(rng()*colors.length)];
+      row.push({shape:s, color:col});
+    }
+    grid.push(row);
+  }
+
+  var k;
+  if (ruleType===3) {
+    var exceptions=0;
+    for (r=0;r<cfg.rows;r++) for (cx=0;cx<cfg.cols;cx++) if (grid[r][cx].shape===targetShape && grid[r][cx].color===targetColor) exceptions++;
+    var needExc = 2 - exceptions;
+    for (k=0;k<needExc;k++){
+      var er=Math.floor(rng()*cfg.rows), ec=Math.floor(rng()*cfg.cols);
+      grid[er][ec] = { shape:targetShape, color:targetColor };
+    }
+  } else {
+    var matchCheck=0;
+    for (r=0;r<cfg.rows;r++) for (cx=0;cx<cfg.cols;cx++) if (isMatch(grid[r][cx].shape, grid[r][cx].color)) matchCheck++;
+    if (matchCheck < 3) {
+      var need = 3 - matchCheck;
+      for (k=0;k<need;k++){
+        var fr=Math.floor(rng()*cfg.rows), fc=Math.floor(rng()*cfg.cols);
+        if (!isMatch(grid[fr][fc].shape, grid[fr][fc].color)) { grid[fr][fc] = { shape:targetShape, color:targetColor }; }
+      }
+    }
+  }
+
+  var matchCount=0;
+  for (r=0;r<cfg.rows;r++) for (cx=0;cx<cfg.cols;cx++) if (isMatch(grid[r][cx].shape, grid[r][cx].color)) matchCount++;
+
+  var container=document.createElement('div'); container.className='cancel-grid';
+  for (r=0;r<cfg.rows;r++){
+    var rowDiv=document.createElement('div'); rowDiv.className='cancel-grid-row';
+    for (cx=0;cx<cfg.cols;cx++){
+      var cell=document.createElement('div'); cell.className='cancel-cell';
+      cell.style.color = grid[r][cx].color;
+      cell.textContent = grid[r][cx].shape;
+      rowDiv.appendChild(cell);
+    }
+    container.appendChild(rowDiv);
+  }
+
+  var ruleDiv2=document.createElement('div'); ruleDiv2.className='path-rule'; ruleDiv2.innerHTML=ruleText;
+  var card=makeCard('Cancellazione selettiva','Segui la regola qui sotto e cerchia solo le forme giuste!',name);
+  card.appendChild(ruleDiv2);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var answerBox=document.createElement('div'); answerBox.className='count-answer';
+  answerBox.innerHTML = 'Quante ne hai cerchiate? <input type="text" maxlength="3">';
+  card.appendChild(answerBox);
+
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzione per il genitore: ' + matchCount + ' forme corrispondono alla regola.';
+  card.appendChild(key);
+
+  addGuideBtn(card,'cancel');
+  area.appendChild(card);
+}
+
+/* ==================== TROVA LA REGOLA — motore di pattern ====================
+   Helper generici, riutilizzati da piu' famiglie di regole qualitativamente
+   diverse (non solo valori diversi della stessa regola, per evitare
+   ripetitivita' come discusso). */
+function repeatStr(str, n) {
+  var out = '';
+  for (var i=0;i<n;i++) out += str;
+  return out;
+}
+
+function buildCyclicPattern(pool, cycleLen) {
+  var shuffled = pool.slice().sort(function(){ return rng()-0.5; });
+  var cycle = shuffled.slice(0, cycleLen);
+  var extra = Math.floor(rng()*cycleLen);
+  var shown = cycleLen*2 + extra;
+  var seq=[], idx;
+  for (idx=0; idx<shown; idx++) seq.push(cycle[idx % cycleLen]);
+  var correct = cycle[shown % cycleLen];
+  var prevVal = cycle[(shown-1) % cycleLen];
+  var distractors=[prevVal];
+  var extraCandidate=null, di;
+  for (di=0; di<cycle.length; di++){
+    if (cycle[di]!==correct && cycle[di]!==prevVal) { extraCandidate=cycle[di]; break; }
+  }
+  if (extraCandidate===null){
+    for (di=0; di<pool.length; di++){
+      if (pool[di]!==correct && pool[di]!==prevVal) { extraCandidate=pool[di]; break; }
+    }
+  }
+  distractors.push(extraCandidate);
+  return { seq: seq, correct: correct, distractors: distractors };
+}
+
+function buildArithmeticPattern(start, step, shownLength) {
+  var seq=[], i;
+  for (i=0;i<shownLength;i++) seq.push(start + step*i);
+  var correct = start + step*shownLength;
+  var prevVal = start + step*(shownLength-1);
+  var distractors=[prevVal];
+  var alt = correct + 1;
+  if (alt===prevVal || alt===correct) alt = correct - 1;
+  distractors.push(alt);
+  return { seq: seq, correct: correct, distractors: distractors };
+}
+
+function renderRuleValue(cell, family, value, fixedSymbol) {
+  if (family==='cycleSymbol') { cell.textContent = value; }
+  else if (family==='cycleColor') { cell.classList.add('swatch'); cell.style.background = value; }
+  else if (family==='sizeAlt') { cell.textContent = fixedSymbol; cell.style.fontSize = value + 'rem'; }
+  else if (family==='countGrowth') { cell.textContent = repeatStr(fixedSymbol, value); cell.classList.add('wide'); }
+  else { cell.textContent = String(value); cell.classList.add('numeric'); }
+}
+
+/* ==================== TROVA LA REGOLA ====================
+   Fonti di variabilita': pool di 5 "famiglie" di regole qualitativamente
+   diverse (simboli ciclici, colori ciclici, dimensione alternata, quantita'
+   crescente, sequenza numerica) scelte a caso in base alla fascia, ognuna
+   con parametri interni random (simboli/colori coinvolti, lunghezza ciclo,
+   punto di partenza, passo, offset). Risposta a scelta multipla (3 opzioni,
+   2 distrattori plausibili "quasi giusti") per restare verificabile su
+   carta stampata senza ambiguita'. */
+function generateRule(area, diff, name) {
+  var symbolPool = ['🐶','🐱','🐰','🦊','🐻','🐼','🐸','🐵','🦁','🐷','🐨','🐯','🦉','🐢','🐳','⭐','🌸','🍎','🍊','🍇','🌙','☀️','⚽','🎈','🚗','🚀','❤️'];
+  var colorPalette = ['#e05f8e','#4a90d9','#4caf7d','#f47c2f','#7c5cbf','#c99a2e'];
+  var sizePool = [1.1, 1.8, 2.6];
+
+  var families;
+  if (diff==='explorer')      families = ['cycleSymbol','countGrowth'];
+  else if (diff==='curious')  families = ['cycleSymbol','sizeAlt','countGrowth'];
+  else if (diff==='growing')  families = ['cycleSymbol','cycleColor','numeric'];
+  else                        families = ['cycleColor','numeric','cycleSymbol'];
+  var family = families[Math.floor(rng()*families.length)];
+
+  var fixedSymbol = symbolPool[Math.floor(rng()*symbolPool.length)];
+  var pattern, ruleText;
+
+  if (family==='cycleSymbol') {
+    var cLen = (diff==='explorer') ? 2 : (diff==='challenge' ? 4 : 3);
+    pattern = buildCyclicPattern(symbolPool, cLen);
+    ruleText = 'Osserva bene la sequenza di simboli: quale viene dopo?';
+  } else if (family==='cycleColor') {
+    var cLen2 = (diff==='challenge') ? 4 : 3;
+    pattern = buildCyclicPattern(colorPalette, cLen2);
+    ruleText = 'Osserva bene la sequenza di colori: quale viene dopo?';
+  } else if (family==='sizeAlt') {
+    pattern = buildCyclicPattern(sizePool, 3);
+    ruleText = 'Osserva come cambia la dimensione: quale misura viene dopo?';
+  } else if (family==='countGrowth') {
+    var start = 1 + Math.floor(rng()*2);
+    var shownLen = (diff==='explorer') ? 3 : 4;
+    pattern = buildArithmeticPattern(start, 1, shownLen);
+    ruleText = 'Osserva come cresce la quantità: quanti simboli vengono dopo?';
+  } else {
+    var start2 = 1 + Math.floor(rng()*8);
+    var stepPool = (diff==='challenge') ? [2,3,4,5] : [1,2,3];
+    var step = stepPool[Math.floor(rng()*stepPool.length)];
+    var shownLen2 = (diff==='challenge') ? 6 : 5;
+    pattern = buildArithmeticPattern(start2, step, shownLen2);
+    ruleText = 'Osserva la sequenza di numeri: quale viene dopo?';
+  }
+
+  var row=document.createElement('div'); row.className='rule-row';
+  var i;
+  for (i=0;i<pattern.seq.length;i++){
+    var cell=document.createElement('div'); cell.className='rule-item';
+    renderRuleValue(cell, family, pattern.seq[i], fixedSymbol);
+    row.appendChild(cell);
+  }
+  var blank=document.createElement('div'); blank.className='rule-item rule-blank'; blank.textContent='❓';
+  row.appendChild(blank);
+
+  var options = [ {v:pattern.correct, ok:true}, {v:pattern.distractors[0], ok:false}, {v:pattern.distractors[1], ok:false} ];
+  options.sort(function(){ return rng()-0.5; });
+
+  var letters=['A','B','C'];
+  var correctLetter='';
+  var optWrap=document.createElement('div'); optWrap.className='rule-options';
+  for (i=0;i<options.length;i++){
+    var optBox=document.createElement('div'); optBox.className='rule-option';
+    var optCell=document.createElement('div'); optCell.className='rule-item';
+    renderRuleValue(optCell, family, options[i].v, fixedSymbol);
+    var optLabel=document.createElement('div'); optLabel.className='rule-option-label'; optLabel.textContent=letters[i];
+    optBox.appendChild(optCell);
+    optBox.appendChild(optLabel);
+    optWrap.appendChild(optBox);
+    if (options[i].ok) correctLetter = letters[i];
+  }
+
+  var block=document.createElement('div'); block.className='rule-block';
+  block.appendChild(row);
+  block.appendChild(optWrap);
+
+  var ruleDiv3=document.createElement('div'); ruleDiv3.className='path-rule'; ruleDiv3.textContent=ruleText;
+  var card=makeCard('Trova la regola','Scopri la logica della sequenza e cerchia la risposta giusta!',name);
+  card.appendChild(ruleDiv3);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(block); card.appendChild(wrap.outer);
+
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Risposta corretta per il genitore: opzione ' + correctLetter;
+  card.appendChild(key);
+
+  addGuideBtn(card,'rule');
   area.appendChild(card);
 }
