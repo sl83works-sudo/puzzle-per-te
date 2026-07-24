@@ -234,19 +234,95 @@ function generateWordSearch(area, diff, name) {
   card.appendChild(wordListDiv);addGuideBtn(card,'words');area.appendChild(card);
 }
 
-/* ==================== SUDOKU ==================== */
+/* ==================== SUDOKU — motore vero (backtracking) ====================
+   Sostituisce il precedente "shuffle di UNA griglia base" (segnalato non
+   conforme alla Regola di Randomizzazione). Ora la griglia risolta viene
+   generata da zero ad ogni chiamata con backtracking randomizzato, e le
+   celle vengono rimosse una a una SOLO se il puzzle risultante mantiene
+   una soluzione UNICA (verificata con un secondo backtracking che conta
+   le soluzioni e si ferma appena ne trova 2, per restare veloce). */
+function sudokuIsValid(board, r, c, val) {
+  var i, j, br, bc;
+  for (i=0;i<9;i++) { if (board[r][i]===val) return false; if (board[i][c]===val) return false; }
+  br = Math.floor(r/3)*3; bc = Math.floor(c/3)*3;
+  for (i=0;i<3;i++) for (j=0;j<3;j++) if (board[br+i][bc+j]===val) return false;
+  return true;
+}
+
+function sudokuFindEmpty(board) {
+  for (var r=0;r<9;r++) for (var c=0;c<9;c++) if (board[r][c]===0) return [r,c];
+  return null;
+}
+
+function sudokuGenerateFull() {
+  var board=[], r, c;
+  for (r=0;r<9;r++){ var row=[]; for (c=0;c<9;c++) row.push(0); board.push(row); }
+  function fill() {
+    var empty = sudokuFindEmpty(board);
+    if (!empty) return true;
+    var er=empty[0], ec=empty[1];
+    var nums=[1,2,3,4,5,6,7,8,9];
+    nums.sort(function(){ return rng()-0.5; });
+    for (var i=0;i<nums.length;i++) {
+      var val=nums[i];
+      if (sudokuIsValid(board, er, ec, val)) {
+        board[er][ec]=val;
+        if (fill()) return true;
+        board[er][ec]=0;
+      }
+    }
+    return false;
+  }
+  fill();
+  return board;
+}
+
+function sudokuCountSolutions(board, limit) {
+  var count=0;
+  function solve() {
+    if (count>=limit) return;
+    var empty = sudokuFindEmpty(board);
+    if (!empty) { count++; return; }
+    var r=empty[0], c=empty[1];
+    for (var val=1; val<=9; val++) {
+      if (count>=limit) return;
+      if (sudokuIsValid(board, r, c, val)) {
+        board[r][c]=val;
+        solve();
+        board[r][c]=0;
+      }
+    }
+  }
+  solve();
+  return count;
+}
+
 function generateSudoku(area, diff, name) {
-  var base=[[5,3,4,6,7,8,9,1,2],[6,7,2,1,9,5,3,4,8],[1,9,8,3,4,2,5,6,7],[8,5,9,7,6,1,4,2,3],[4,2,6,8,5,3,7,9,1],[7,1,3,9,2,4,8,5,6],[9,6,1,5,3,7,2,8,4],[2,8,7,4,1,9,6,3,5],[3,4,5,2,8,6,1,7,9]];
-  var i,box,r1,r2,c1,c2,r,tmp;
-  for(i=0;i<10;i++){box=Math.floor(rng()*3)*3;r1=box+Math.floor(rng()*3);r2=box+Math.floor(rng()*3);tmp=base[r1];base[r1]=base[r2];base[r2]=tmp;}
-  for(i=0;i<10;i++){box=Math.floor(rng()*3)*3;c1=box+Math.floor(rng()*3);c2=box+Math.floor(rng()*3);for(r=0;r<9;r++){tmp=base[r][c1];base[r][c1]=base[r][c2];base[r][c2]=tmp;}}
-  var remove=diff==='explorer'?25:diff==='curious'?35:diff==='growing'?45:52;
-  var puzzle=[],pr,pc;
-  for(r=0;r<9;r++)puzzle.push(base[r].slice());
-  var removed=0;
-  while(removed<remove){pr=Math.floor(rng()*9);pc=Math.floor(rng()*9);if(puzzle[pr][pc]!==0){puzzle[pr][pc]=0;removed++;}}
+  var solved = sudokuGenerateFull();
+  var removeTarget = diff==='explorer'?25:diff==='curious'?35:diff==='growing'?45:52;
+
+  var puzzle=[], r, c;
+  for (r=0;r<9;r++) puzzle.push(solved[r].slice());
+
+  var positions=[];
+  for (r=0;r<9;r++) for (c=0;c<9;c++) positions.push([r,c]);
+  positions.sort(function(){ return rng()-0.5; });
+
+  var removed=0, pi;
+  for (pi=0; pi<positions.length && removed<removeTarget; pi++) {
+    var pr=positions[pi][0], pc=positions[pi][1];
+    var backup = puzzle[pr][pc];
+    if (backup===0) continue;
+    puzzle[pr][pc]=0;
+    var testBoard=[];
+    for (r=0;r<9;r++) testBoard.push(puzzle[r].slice());
+    var solCount = sudokuCountSolutions(testBoard, 2);
+    if (solCount===1) { removed++; }
+    else { puzzle[pr][pc]=backup; }
+  }
+
   var container=document.createElement('div');container.className='sudoku-grid';
-  var c,cell;
+  var cell;
   for(r=0;r<9;r++)for(c=0;c<9;c++){
     cell=document.createElement('div');cell.className='sudoku-cell'+(puzzle[r][c]!==0?' given':'');
     if((c+1)%3===0&&c<8)cell.classList.add('box-right');
