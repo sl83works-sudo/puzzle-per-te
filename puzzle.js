@@ -423,8 +423,16 @@ function generateSequence(area, diff, name) {
 
 /* ==================== PERCORSO GUIDATO ====================
    Fonti di variabilita': percorso generato con random-walk (sempre
-   diverso) + pool di 3 tipi di regola (colore / frecce / numeri) +
-   parametro della regola scelto a caso (colore target, direzione). */
+   diverso) + pool di 2 tipi di regola (colore / frecce) + parametro
+   della regola scelto a caso (colore target, direzione).
+   NOTA: la variante "numeri" (collega 1,2,3... in ordine) e' stata
+   rimossa in via definitiva: i numeri distrattori potevano duplicare
+   numeri gia' usati nel percorso corretto (ambiguita' reale), e il
+   contrasto colore usato per leggibilita' (scuro sul percorso, grigio
+   spento sui distrattori) finiva per evidenziare visivamente la
+   soluzione, esattamente cio' che il progetto evita ovunque (vedi
+   nota "NO highlighting" nel cerca-parole). Non reintrodurre senza
+   prima risolvere entrambi i problemi alla radice. */
 function generatePath(area, diff, name) {
   var gridCfg = { explorer:6, curious:8, growing:10, challenge:12 };
   var size = gridCfg[diff] || 8;
@@ -452,7 +460,7 @@ function generatePath(area, diff, name) {
   var pathSet={}, pi;
   for (pi=0;pi<path.length;pi++){ pathSet[path[pi].x+'_'+path[pi].y]=pi; }
 
-  var ruleType = Math.floor(rng()*3);
+  var ruleType = Math.floor(rng()*2);
   var colorPalette=['#e05f8e','#4a90d9','#4caf7d','#f47c2f','#7c5cbf','#c99a2e'];
   var targetColor = colorPalette[Math.floor(rng()*colorPalette.length)];
   var arrowChars={ right:'➡️', up:'⬆️', down:'⬇️' };
@@ -472,7 +480,7 @@ function generatePath(area, diff, name) {
       if (pathSet.hasOwnProperty(k1)) { grid[r][c].symbol='●'; grid[r][c].color=targetColor; }
       else { grid[r][c].symbol='●'; grid[r][c].color=colorPalette[Math.floor(rng()*colorPalette.length)]; }
     }
-  } else if (ruleType===1) {
+  } else {
     ruleText = 'Segui le frecce dalla partenza (S) fino all\'arrivo (E)!';
     for (pi=0;pi<path.length-1;pi++){
       var cur=path[pi], next=path[pi+1];
@@ -486,27 +494,17 @@ function generatePath(area, diff, name) {
     for (r=0;r<h;r++) for (c=0;c<w;c++){
       if (!grid[r][c].symbol) { grid[r][c].symbol=arrowChars[dirsAll[Math.floor(rng()*3)]]; grid[r][c].color='#8a7a60'; }
     }
-  } else {
-    ruleText = 'Collega i numeri in ordine crescente da 1 a '+path.length+', partendo dalla S!';
-    for (pi=0;pi<path.length;pi++){
-      grid[path[pi].y][path[pi].x].symbol = String(pi+1);
-      grid[path[pi].y][path[pi].x].color = '#2d2416';
-    }
-    for (r=0;r<h;r++) for (c=0;c<w;c++){
-      if (!grid[r][c].symbol) {
-        var randNum = Math.floor(rng()*(path.length*2))+1;
-        grid[r][c].symbol = String(randNum);
-        grid[r][c].color = '#8a7a60';
-      }
-    }
   }
 
+  /* i pallini colorati hanno bisogno di celle piu' grandi delle frecce
+     per distinguere bene colori simili (es. rosa vs viola) */
+  var cellPx = (ruleType===0) ? 40 : 32;
   var container=document.createElement('div'); container.className='path-grid';
-  container.style.gridTemplateColumns = 'repeat(' + w + ', 32px)';
-  container.style.gridTemplateRows = 'repeat(' + h + ', 32px)';
+  container.style.gridTemplateColumns = 'repeat(' + w + ', ' + cellPx + 'px)';
+  container.style.gridTemplateRows = 'repeat(' + h + ', ' + cellPx + 'px)';
   for (r=0;r<h;r++){
     for (c=0;c<w;c++){
-      var cell=document.createElement('div'); cell.className='path-cell';
+      var cell=document.createElement('div'); cell.className='path-cell' + (ruleType===0 ? ' dot-cell' : '');
       var isStart = (c===path[0].x && r===path[0].y);
       var isEnd = (c===path[path.length-1].x && r===path[path.length-1].y);
       if (isStart) { cell.classList.add('start'); cell.textContent='S'; }
