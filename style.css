@@ -16,7 +16,10 @@ body { font-family: 'Nunito', sans-serif; background: var(--c-bg); color: var(--
 .header p { font-size: 0.9rem; color: var(--c-muted); margin-top: 0.2rem; }
 
 /* CONTROLS */
-.controls { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.8rem 1rem; background: white; border-bottom: 1px solid var(--c-border); align-items: center; justify-content: center; }
+.controls { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.8rem 1rem; background: white; border-bottom: 1px solid var(--c-border); }
+.controls-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: center; }
+.controls-meta { padding-top: 0.4rem; border-top: 1px dashed var(--c-border); }
+.controls-actions { padding-top: 0.2rem; }
 
 .btn { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.82rem; padding: 0.4rem 0.9rem; border-radius: 50px; border: 2px solid transparent; cursor: pointer; transition: transform 0.12s; }
 .btn:active { transform: scale(0.96); }
@@ -85,6 +88,7 @@ canvas { display: block; border-radius: 8px; border: 1.5px solid var(--c-border)
 .path-cell { display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; background: white; }
 .path-cell.start { background: #e3f7ec; color: #2f8b5c; font-family: 'Fredoka One', cursive; }
 .path-cell.end { background: #fdeaea; color: #c94b4b; font-family: 'Fredoka One', cursive; }
+.path-cell.dot-cell { font-size: 1.9rem; }
 
 /* CANCELLAZIONE SELETTIVA */
 .cancel-grid { display: flex; flex-direction: column; gap: 3px; }
