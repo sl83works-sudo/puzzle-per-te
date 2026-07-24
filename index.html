@@ -16,27 +16,33 @@
 </div>
 
 <div class="controls">
-  <button class="btn btn-type active" onclick="setType('maze',this)">🌀 Labirinto</button>
-  <button class="btn btn-type" onclick="setType('words',this)">🔤 Cerca parole</button>
-  <button class="btn btn-type" onclick="setType('sudoku',this)">🔢 Sudoku</button>
-  <button class="btn btn-type" onclick="setType('color',this)">🎨 Colora!</button>
-  <button class="btn btn-type" onclick="setType('count',this)">👀 Punta e conta</button>
-  <button class="btn btn-type" onclick="setType('sequence',this)">🧠 Sequenza</button>
-  <button class="btn btn-type" onclick="setType('path',this)">🧭 Percorso guidato</button>
-  <button class="btn btn-type" onclick="setType('cancel',this)">🎯 Cancellazione</button>
-  <button class="btn btn-type" onclick="setType('rule',this)">🧩 Trova la regola</button>
+  <div class="controls-row controls-types">
+    <button class="btn btn-type active" onclick="setType('maze',this)">🌀 Labirinto</button>
+    <button class="btn btn-type" onclick="setType('words',this)">🔤 Cerca parole</button>
+    <button class="btn btn-type" onclick="setType('sudoku',this)">🔢 Sudoku</button>
+    <button class="btn btn-type" onclick="setType('color',this)">🎨 Colora!</button>
+    <button class="btn btn-type" onclick="setType('count',this)">👀 Punta e conta</button>
+    <button class="btn btn-type" onclick="setType('sequence',this)">🧠 Sequenza</button>
+    <button class="btn btn-type" onclick="setType('path',this)">🧭 Percorso guidato</button>
+    <button class="btn btn-type" onclick="setType('cancel',this)">🎯 Cancellazione</button>
+    <button class="btn btn-type" onclick="setType('rule',this)">🧩 Trova la regola</button>
+  </div>
 
-  <span class="diff-label">Età:</span>
-  <select id="difficulty">
-    <option value="explorer">🌱 3–5 anni</option>
-    <option value="curious" selected>🌟 6–8 anni</option>
-    <option value="growing">🚀 9–11 anni</option>
-    <option value="challenge">🧠 12+ anni</option>
-  </select>
+  <div class="controls-row controls-meta">
+    <input type="text" id="nameInput" placeholder="Nome del bambino..." maxlength="20">
+    <span class="diff-label">Età:</span>
+    <select id="difficulty">
+      <option value="explorer">🌱 3–5 anni</option>
+      <option value="curious" selected>🌟 6–8 anni</option>
+      <option value="growing">🚀 9–11 anni</option>
+      <option value="challenge">🧠 12+ anni</option>
+    </select>
+  </div>
 
-  <input type="text" id="nameInput" placeholder="Nome del bambino..." maxlength="20">
-  <button class="btn btn-gen" onclick="generate()">✨ Genera!</button>
-  <button class="btn btn-print" onclick="window.print()">🖨️ Stampa</button>
+  <div class="controls-row controls-actions">
+    <button class="btn btn-gen" onclick="generate()">✨ Genera!</button>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Stampa</button>
+  </div>
 </div>
 
 <div class="puzzle-area" id="puzzleArea">
