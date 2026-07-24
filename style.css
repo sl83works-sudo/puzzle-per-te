@@ -90,6 +90,17 @@ canvas { display: block; border-radius: 8px; border: 1.5px solid var(--c-border)
 /* SOLUZIONE PER IL GENITORE (comune a più schede) */
 .answer-key { margin-top: 1rem; font-size: 0.72rem; color: #c8bfa8; }
 
+/* WRAPPER DI SCALING PER LA STAMPA (generico, usato da tutte le schede) */
+.print-scale-content { width: 100%; display: flex; align-items: center; justify-content: center; }
+.print-scale-inner { display: inline-block; transform-origin: center center; }
+
+/* STRUTTURA A PIEGATURA — SEQUENZA */
+.sequence-fold-wrap { width: 100%; display: flex; flex-direction: column; }
+.sequence-half { display: flex; flex-direction: column; align-items: center; }
+.sequence-label { font-size: 0.8rem; font-weight: 700; color: var(--c-muted); margin-bottom: 0.4rem; }
+.sequence-divider { border-top: 2px dashed var(--c-border); position: relative; margin: 1rem 0; text-align: center; width: 100%; }
+.sequence-divider span { position: relative; top: -10px; background: white; padding: 0 10px; font-size: 0.72rem; color: var(--c-muted); font-weight: 700; }
+
 /* GUIDA GENITORI */
 .guide-btn { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.75rem; padding: 0.3rem 0.8rem; border-radius: 50px; border: 1.5px solid var(--c-purple); background: white; color: var(--c-purple); cursor: pointer; margin-top: 0.8rem; }
 .guide-btn:hover { background: var(--c-purple); color: white; }
@@ -97,12 +108,30 @@ canvas { display: block; border-radius: 8px; border: 1.5px solid var(--c-border)
 .guide-text { font-size: 0.82rem; color: #444; line-height: 1.6; }
 .guide-close { font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 700; margin-top: 0.6rem; padding: 0.25rem 0.7rem; border-radius: 50px; border: 1px solid #ccc; background: white; cursor: pointer; color: var(--c-muted); display: block; }
 
-/* STAMPA — A4 orizzontale, tutto centrato */
+/* STAMPA — A4 orizzontale, ogni scheda riempie l'intero foglio */
 @media print {
   @page { size: A4 landscape; margin: 10mm; }
   .controls, .header, .guide-btn, .parent-guide { display: none !important; }
   body { background: white; }
   .puzzle-area { padding: 0; gap: 0; align-items: center; }
-  .puzzle-card { box-shadow: none; border: 1.5px solid #ccc; page-break-after: always; max-width: 100%; margin: 0 auto; border-radius: 0; align-items: center; }
-  canvas { max-width: 100%; height: auto; }
+
+  /* Ogni .puzzle-card diventa una pagina intera (297x210mm - 10mm di margine
+     per lato = 277x190mm di area utile) e si organizza in colonna: titolo/
+     sottotitolo/nome in alto a dimensione normale, il contenuto scalabile
+     (.print-scale-content) che si espande a riempire tutto lo spazio
+     restante, eventuali etichette/risposte in basso a dimensione normale. */
+  .puzzle-card {
+    box-shadow: none; border: 1.5px solid #ccc; page-break-after: always;
+    width: 277mm; height: 190mm; max-width: none; margin: 0 auto; border-radius: 0;
+    box-sizing: border-box; padding: 8mm;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  }
+  .puzzle-title, .puzzle-subtitle, .puzzle-name,
+  .wordlist, .count-target-box, .count-answer, .path-rule, .answer-key,
+  .sequence-label, .sequence-divider {
+    flex: 0 0 auto;
+  }
+  .print-scale-content { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+  .sequence-fold-wrap { flex: 1 1 auto; min-height: 0; width: 100%; }
+  .sequence-half { flex: 1 1 50%; min-height: 0; overflow: hidden; }
 }
