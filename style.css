@@ -68,6 +68,7 @@ canvas { display: block; border-radius: 8px; border: 1.5px solid var(--c-border)
 .sudoku-cell.given { color: var(--c-purple); }
 .sudoku-cell.box-right { border-right: 2px solid var(--c-text); }
 .sudoku-cell.box-bottom { border-bottom: 2px solid var(--c-text); }
+.sudoku-grid.junior .sudoku-cell { width: 44px; height: 44px; font-size: 1.5rem; font-family: inherit; }
 
 /* PUNTA E CONTA */
 .count-grid { display: flex; flex-direction: column; gap: 3px; }
@@ -105,6 +106,29 @@ canvas { display: block; border-radius: 8px; border: 1.5px solid var(--c-border)
 .rule-options { display: flex; gap: 22px; justify-content: center; }
 .rule-option { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; }
 .rule-option-label { font-size: 0.8rem; font-weight: 700; color: var(--c-muted); }
+
+/* RIFLESSO */
+.mirror-grid { display: inline-grid; gap: 2px; }
+.mirror-cell { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--c-border); border-radius: 4px; background: #fafafa; }
+.mirror-cell.blank { background: white; border-style: dashed; }
+.mirror-cell.axis-right { border-right: 3px solid var(--c-purple); }
+.mirror-cell.axis-bottom { border-bottom: 3px solid var(--c-purple); }
+
+/* TROVA LE DIFFERENZE */
+.diff-pair { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+.diff-single { display: flex; flex-direction: column; align-items: center; }
+.diff-label-badge { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--c-purple); margin-bottom: 0.5rem; }
+
+/* CALCOLO */
+.calc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 14px; width: 100%; }
+.calc-problem { border: 1.5px solid var(--c-border); border-radius: 10px; padding: 10px; background: #fafafa; display: flex; align-items: center; justify-content: center; min-height: 90px; }
+.calc-vertical { text-align: right; font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: var(--c-text); }
+.calc-op-row { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.calc-op { color: var(--c-orange); }
+.calc-line { border-top: 2px solid var(--c-text); margin-top: 4px; width: 100%; }
+.calc-answer-box { height: 1.4em; }
+.calc-horizontal { font-family: 'Fredoka One', cursive; font-size: 1.2rem; color: var(--c-text); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.calc-blank { display: inline-block; width: 40px; border-bottom: 2px solid var(--c-text); height: 1.2em; }
 
 /* SOLUZIONE PER IL GENITORE (comune a più schede) */
 .answer-key { margin-top: 1rem; font-size: 0.72rem; color: #c8bfa8; }
