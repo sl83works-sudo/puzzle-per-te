@@ -32,6 +32,13 @@ function generate() {
   else if (currentType === 'path')     generatePath(area, diff, name);
   else if (currentType === 'cancel')   generateCancel(area, diff, name);
   else if (currentType === 'rule')     generateRule(area, diff, name);
+  else if (currentType === 'sudokujunior') generateSudokuJunior(area, diff, name);
+  else if (currentType === 'mirror') generateMirror(area, diff, name);
+  else if (currentType === 'pairs') generateCoppie(area, diff, name);
+  else if (currentType === 'oddone') generateIntruso(area, diff, name);
+  else if (currentType === 'diff') generateDifferences(area, diff, name);
+  else if (currentType === 'calc') generateCalcolo(area, diff, name);
+  else if (currentType === 'tables') generateTabelline(area, diff, name);
 }
 
 function makeCard(title, subtitle, name) {
@@ -54,7 +61,14 @@ var parentGuides = {
   sequence: 'Questa scheda allena la memoria di lavoro visiva, cioè la capacità di trattenere un\'informazione per il tempo necessario a riutilizzarla. Lasciate che il bambino osservi la prima pagina per un tempo libero (non cronometrato la prima volta), poi giri pagina da solo. Se sbaglia l\'ordine non è un errore da correggere subito: chiedete "quale ricordi per primo?" per allenare la strategia, non solo il risultato.',
   path: 'Questa scheda allena la pianificazione motoria e lo scanning visivo guidato da una regola. È importante che il bambino comprenda la regola PRIMA di iniziare a tracciare: fatevela ripetere a voce con parole sue. Per bambini con difficoltà di pianificazione, permettete di seguire il percorso con il dito prima di tracciarlo con la matita.',
   cancel: 'Questa scheda allena l\'attenzione selettiva e il controllo inibitorio: il bambino deve ignorare tutti gli elementi che assomigliano al bersaglio ma non lo sono del tutto (stessa forma ma colore diverso, o viceversa). Fatevi ripetere la regola a voce prima di iniziare, per essere sicuri l\'abbia capita. Per bambini con ADHD è utile far segnare con una matita leggera ogni elemento appena trovato, così il conteggio resta tracciabile anche se l\'attenzione si interrompe. Nella variante "cerchia tutto tranne..." si allena anche l\'inibizione di una risposta automatica.',
-  rule: 'Questa scheda allena il ragionamento induttivo: il bambino deve scoprire da solo la logica nascosta in una sequenza, senza che gliela spieghiate prima. Lasciatelo formulare un\'ipotesi ad alta voce ("secondo me viene dopo...") prima di guardare le opzioni. Se sbaglia, non correggete subito: chiedete "cosa ti ha fatto pensare a quella risposta?" per allenare la strategia di ragionamento, non solo il risultato finale.'
+  rule: 'Questa scheda allena il ragionamento induttivo: il bambino deve scoprire da solo la logica nascosta in una sequenza, senza che gliela spieghiate prima. Lasciatelo formulare un\'ipotesi ad alta voce ("secondo me viene dopo...") prima di guardare le opzioni. Se sbaglia, non correggete subito: chiedete "cosa ti ha fatto pensare a quella risposta?" per allenare la strategia di ragionamento, non solo il risultato finale.',
+  sudokujunior: 'Questa versione a simboli allena la stessa logica del sudoku classico (ogni elemento una sola volta per riga, colonna e riquadro) ma senza bisogno di saper contare fino a 9: perfetta come primo approccio al ragionamento logico-spaziale. Fate nominare ad alta voce gli animali già presenti in ogni riga/colonna prima di provare a riempire una casella vuota, così il bambino impara a "scandire" sistematicamente invece di tentare a caso.',
+  mirror: 'Questa scheda allena la percezione spaziale e la pianificazione visiva: il bambino deve capire come si "rovescia" un disegno rispetto a una linea, non semplicemente copiarlo. Fategli nominare ad alta voce la posizione di ogni elemento ("in alto a sinistra c\'è un quadrato rosso") prima di disegnarne il riflesso: aiuta a trasformare un compito visivo in uno verbale, più facile da autocontrollare per il bambino stesso.',
+  pairs: 'Questa scheda allena la memoria visiva a breve termine e la scansione sistematica della griglia: il bambino deve tenere a mente dove ha già visto un simbolo mentre continua a cercare. Suggerite di procedere riga per riga invece che a salti casuali, e di segnare leggermente ogni simbolo trovato per non doverlo ricontrollare più volte.',
+  oddone: 'Questa scheda allena la categorizzazione e il ragionamento per esclusione: il bambino deve prima capire cosa hanno in comune gli elementi del gruppo, poi trovare quello che non rispetta la regola. Per le fasce più piccole la categoria è indicata esplicitamente come aiuto; per le fasce più grandi va scoperta da soli, il che rende l\'esercizio più impegnativo di quanto sembri a prima vista.',
+  diff: 'Questa scheda allena l\'attenzione selettiva e il confronto visivo sistematico: il bambino deve scandire i due riquadri in parallelo invece di guardarli separatamente. Suggerite di confrontare una riga alla volta tra i due disegni, invece di cercare "a occhio" su tutta la griglia in una volta.',
+  calc: 'Questa scheda allena l\'automatismo di calcolo, utile sia a scuola sia nella vita quotidiana. Non serve cronometrare, specialmente le prime volte: l\'obiettivo è la correttezza, la velocità arriva con la pratica. Per le operazioni in colonna, ricordate al bambino di allineare bene le cifre per unità/decine/centinaia prima di sommare o sottrarre — è spesso la causa principale degli errori, non il calcolo in sé.',
+  tables: 'Questa scheda allena la memoria a lungo termine dei fatti numerici (le tabelline), non il ragionamento: l\'obiettivo è il richiamo automatico, non il "ricalcolo" ogni volta. Se il bambino conta ancora sulle dita o si aiuta con le addizioni ripetute, va benissimo così nelle prime fasi — è un passaggio naturale prima della memorizzazione vera. L\'ordine mescolato è voluto: se recita la tabellina in sequenza da capo ogni volta, probabilmente la sta ancora imparando "a canzoncina" invece che a memoria vera, ed è un segnale utile per voi genitori.'
 };
 
 function showGuide(type) {
@@ -240,32 +254,36 @@ function generateWordSearch(area, diff, name) {
    generata da zero ad ogni chiamata con backtracking randomizzato, e le
    celle vengono rimosse una a una SOLO se il puzzle risultante mantiene
    una soluzione UNICA (verificata con un secondo backtracking che conta
-   le soluzioni e si ferma appena ne trova 2, per restare veloce). */
-function sudokuIsValid(board, r, c, val) {
-  var i, j, br, bc;
-  for (i=0;i<9;i++) { if (board[r][i]===val) return false; if (board[i][c]===val) return false; }
-  br = Math.floor(r/3)*3; bc = Math.floor(c/3)*3;
-  for (i=0;i<3;i++) for (j=0;j<3;j++) if (board[br+i][bc+j]===val) return false;
+   le soluzioni e si ferma appena ne trova 2, per restare veloce).
+   Generalizzato su N (dimensione griglia) e br/bc (righe/colonne del
+   riquadro, con br*bc=N) cosi' lo stesso motore serve sia il Sudoku
+   classico 9x9 (br=3,bc=3) sia il Sudoku Junior a griglie piu' piccole
+   (4x4 br=2,bc=2 — 6x6 br=2,bc=3). */
+function sudokuIsValid(board, r, c, val, N, br, bc) {
+  var i, j, boxR, boxC;
+  for (i=0;i<N;i++) { if (board[r][i]===val) return false; if (board[i][c]===val) return false; }
+  boxR = Math.floor(r/br)*br; boxC = Math.floor(c/bc)*bc;
+  for (i=0;i<br;i++) for (j=0;j<bc;j++) if (board[boxR+i][boxC+j]===val) return false;
   return true;
 }
 
-function sudokuFindEmpty(board) {
-  for (var r=0;r<9;r++) for (var c=0;c<9;c++) if (board[r][c]===0) return [r,c];
+function sudokuFindEmpty(board, N) {
+  for (var r=0;r<N;r++) for (var c=0;c<N;c++) if (board[r][c]===0) return [r,c];
   return null;
 }
 
-function sudokuGenerateFull() {
+function sudokuGenerateFull(N, br, bc) {
   var board=[], r, c;
-  for (r=0;r<9;r++){ var row=[]; for (c=0;c<9;c++) row.push(0); board.push(row); }
+  for (r=0;r<N;r++){ var row=[]; for (c=0;c<N;c++) row.push(0); board.push(row); }
   function fill() {
-    var empty = sudokuFindEmpty(board);
+    var empty = sudokuFindEmpty(board, N);
     if (!empty) return true;
     var er=empty[0], ec=empty[1];
-    var nums=[1,2,3,4,5,6,7,8,9];
+    var nums=[]; for (var n=1;n<=N;n++) nums.push(n);
     nums.sort(function(){ return rng()-0.5; });
     for (var i=0;i<nums.length;i++) {
       var val=nums[i];
-      if (sudokuIsValid(board, er, ec, val)) {
+      if (sudokuIsValid(board, er, ec, val, N, br, bc)) {
         board[er][ec]=val;
         if (fill()) return true;
         board[er][ec]=0;
@@ -277,16 +295,16 @@ function sudokuGenerateFull() {
   return board;
 }
 
-function sudokuCountSolutions(board, limit) {
+function sudokuCountSolutions(board, limit, N, br, bc) {
   var count=0;
   function solve() {
     if (count>=limit) return;
-    var empty = sudokuFindEmpty(board);
+    var empty = sudokuFindEmpty(board, N);
     if (!empty) { count++; return; }
     var r=empty[0], c=empty[1];
-    for (var val=1; val<=9; val++) {
+    for (var val=1; val<=N; val++) {
       if (count>=limit) return;
-      if (sudokuIsValid(board, r, c, val)) {
+      if (sudokuIsValid(board, r, c, val, N, br, bc)) {
         board[r][c]=val;
         solve();
         board[r][c]=0;
@@ -298,14 +316,15 @@ function sudokuCountSolutions(board, limit) {
 }
 
 function generateSudoku(area, diff, name) {
-  var solved = sudokuGenerateFull();
+  var N=9, br=3, bc=3;
+  var solved = sudokuGenerateFull(N, br, bc);
   var removeTarget = diff==='explorer'?25:diff==='curious'?35:diff==='growing'?45:52;
 
   var puzzle=[], r, c;
-  for (r=0;r<9;r++) puzzle.push(solved[r].slice());
+  for (r=0;r<N;r++) puzzle.push(solved[r].slice());
 
   var positions=[];
-  for (r=0;r<9;r++) for (c=0;c<9;c++) positions.push([r,c]);
+  for (r=0;r<N;r++) for (c=0;c<N;c++) positions.push([r,c]);
   positions.sort(function(){ return rng()-0.5; });
 
   var removed=0, pi;
@@ -315,24 +334,84 @@ function generateSudoku(area, diff, name) {
     if (backup===0) continue;
     puzzle[pr][pc]=0;
     var testBoard=[];
-    for (r=0;r<9;r++) testBoard.push(puzzle[r].slice());
-    var solCount = sudokuCountSolutions(testBoard, 2);
+    for (r=0;r<N;r++) testBoard.push(puzzle[r].slice());
+    var solCount = sudokuCountSolutions(testBoard, 2, N, br, bc);
     if (solCount===1) { removed++; }
     else { puzzle[pr][pc]=backup; }
   }
 
   var container=document.createElement('div');container.className='sudoku-grid';
   var cell;
-  for(r=0;r<9;r++)for(c=0;c<9;c++){
+  for(r=0;r<N;r++)for(c=0;c<N;c++){
     cell=document.createElement('div');cell.className='sudoku-cell'+(puzzle[r][c]!==0?' given':'');
-    if((c+1)%3===0&&c<8)cell.classList.add('box-right');
-    if((r+1)%3===0&&r<8)cell.classList.add('box-bottom');
+    if((c+1)%bc===0&&c<N-1)cell.classList.add('box-right');
+    if((r+1)%br===0&&r<N-1)cell.classList.add('box-bottom');
     if(puzzle[r][c]!==0)cell.textContent=puzzle[r][c];
     container.appendChild(cell);
   }
   var card=makeCard('Sudoku','Ogni numero da 1 a 9 deve comparire una sola volta per riga, colonna e quadrato 3x3.',name);
   var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
   addGuideBtn(card,'sudoku');area.appendChild(card);
+}
+
+/* ==================== SUDOKU JUNIOR (a simboli) ====================
+   Riusa lo stesso motore generico di generateSudoku (backtracking +
+   verifica di soluzione unica), qui su griglie piu' piccole di N=9,
+   pensate per bambini troppo piccoli per la griglia classica: 4x4
+   (riquadri 2x2) per i piu' piccoli, 6x6 (riquadri 2x3) per le fasce
+   successive. Simboli/animali al posto delle cifre, cosi' non serve
+   nemmeno saper contare fino a 9 per giocare. Il set di simboli usato
+   viene rimescolato ad ogni generazione (stessi 4/6 slot logici, ma
+   animali diversi ogni volta) come ulteriore fonte di variabilita'. */
+function generateSudokuJunior(area, diff, name) {
+  var symbolPool = ['🐶','🐱','🐰','🦊','🐻','🦁','🐼','🐸','🐵','🐨','🦉','🐢'];
+  var cfg = {
+    explorer:  { N:4, br:2, bc:2, remove:6  },
+    curious:   { N:6, br:2, bc:3, remove:14 },
+    growing:   { N:6, br:2, bc:3, remove:20 },
+    challenge: { N:6, br:2, bc:3, remove:24 }
+  };
+  var c = cfg[diff] || cfg.curious;
+
+  var shuffledSymbols = symbolPool.slice().sort(function(){ return rng()-0.5; });
+  var symbols = shuffledSymbols.slice(0, c.N);
+
+  var solved = sudokuGenerateFull(c.N, c.br, c.bc);
+  var puzzle=[], r, col;
+  for (r=0;r<c.N;r++) puzzle.push(solved[r].slice());
+
+  var positions=[];
+  for (r=0;r<c.N;r++) for (col=0;col<c.N;col++) positions.push([r,col]);
+  positions.sort(function(){ return rng()-0.5; });
+
+  var removed=0, pi;
+  for (pi=0; pi<positions.length && removed<c.remove; pi++) {
+    var pr=positions[pi][0], pc=positions[pi][1];
+    var backup = puzzle[pr][pc];
+    if (backup===0) continue;
+    puzzle[pr][pc]=0;
+    var testBoard=[];
+    for (r=0;r<c.N;r++) testBoard.push(puzzle[r].slice());
+    var solCount = sudokuCountSolutions(testBoard, 2, c.N, c.br, c.bc);
+    if (solCount===1) { removed++; }
+    else { puzzle[pr][pc]=backup; }
+  }
+
+  var container=document.createElement('div'); container.className='sudoku-grid junior';
+  container.style.gridTemplateColumns = 'repeat(' + c.N + ', 44px)';
+  var cell;
+  for (r=0;r<c.N;r++) for (col=0;col<c.N;col++){
+    cell=document.createElement('div'); cell.className='sudoku-cell'+(puzzle[r][col]!==0?' given':'');
+    if ((col+1)%c.bc===0 && col<c.N-1) cell.classList.add('box-right');
+    if ((r+1)%c.br===0 && r<c.N-1) cell.classList.add('box-bottom');
+    if (puzzle[r][col]!==0) cell.textContent = symbols[puzzle[r][col]-1];
+    container.appendChild(cell);
+  }
+
+  var card=makeCard('Sudoku Junior','Ogni simbolo deve comparire una sola volta per riga, colonna e riquadro!',name);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+  addGuideBtn(card,'sudokujunior');
+  area.appendChild(card);
 }
 
 /* ==================== COLORA LIBERAMENTE ==================== */
@@ -850,5 +929,381 @@ function generateRule(area, diff, name) {
   card.appendChild(key);
 
   addGuideBtn(card,'rule');
+  area.appendChild(card);
+}
+
+/* ==================== RIFLESSO ====================
+   Rivalutata dall'elenco delle schede rimosse in v7 e reintrodotta in
+   v15 in forma astratta (griglia di forme colorate, non un disegno
+   figurativo) proprio per evitare il problema di precisione grafica
+   che affliggeva la versione originale con canvas. Fonti di
+   variabilita': asse di simmetria scelto a caso (verticale/orizzontale)
+   + forma/colore casuali per cella + densita' di celle piene variabile
+   per fascia + dimensione griglia variabile per fascia. */
+function generateMirror(area, diff, name) {
+  var shapesPool = ['●','■','▲','★','♥'];
+  var colorPalette = ['#e05f8e','#4a90d9','#4caf7d','#f47c2f','#7c5cbf','#c99a2e'];
+  var gridCfg = {
+    explorer:  { w:6,  h:4, density:0.6  },
+    curious:   { w:8,  h:6, density:0.55 },
+    growing:   { w:10, h:6, density:0.5  },
+    challenge: { w:12, h:8, density:0.45 }
+  };
+  var cfg = gridCfg[diff] || gridCfg.curious;
+  var w = cfg.w, h = cfg.h;
+  var axis = rng() < 0.5 ? 'vertical' : 'horizontal';
+
+  var grid=[], r, col;
+  for (r=0;r<h;r++){ var row=[]; for (col=0;col<w;col++) row.push(null); grid.push(row); }
+
+  if (axis==='vertical') {
+    for (r=0;r<h;r++) for (col=0;col<w/2;col++) {
+      if (rng() < cfg.density) grid[r][col] = { shape: shapesPool[Math.floor(rng()*shapesPool.length)], color: colorPalette[Math.floor(rng()*colorPalette.length)] };
+    }
+  } else {
+    for (r=0;r<h/2;r++) for (col=0;col<w;col++) {
+      if (rng() < cfg.density) grid[r][col] = { shape: shapesPool[Math.floor(rng()*shapesPool.length)], color: colorPalette[Math.floor(rng()*colorPalette.length)] };
+    }
+  }
+
+  var container=document.createElement('div'); container.className='mirror-grid';
+  container.style.gridTemplateColumns = 'repeat(' + w + ', 34px)';
+  for (r=0;r<h;r++){
+    for (col=0;col<w;col++){
+      var cell=document.createElement('div'); cell.className='mirror-cell';
+      var isSource = (axis==='vertical') ? (col < w/2) : (r < h/2);
+      if (!isSource) { cell.classList.add('blank'); }
+      else if (grid[r][col]) { cell.textContent = grid[r][col].shape; cell.style.color = grid[r][col].color; }
+      if (axis==='vertical' && col === w/2-1) cell.classList.add('axis-right');
+      if (axis==='horizontal' && r === h/2-1) cell.classList.add('axis-bottom');
+      container.appendChild(cell);
+    }
+  }
+
+  var ruleDiv=document.createElement('div'); ruleDiv.className='path-rule';
+  ruleDiv.textContent = 'Disegna il riflesso speculare del disegno nella metà vuota!';
+  var card=makeCard('Riflesso','Immagina uno specchio lungo la linea colorata e completa il disegno.',name);
+  card.appendChild(ruleDiv);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+  addGuideBtn(card,'mirror');
+  area.appendChild(card);
+}
+
+/* ==================== COPPIE ====================
+   Rivalutata e reintrodotta in v15 come "trova le coppie di simboli
+   identici" (memory su carta), non abbinamenti semantici che
+   richiederebbero contenuti curati a mano. Fonti di variabilita':
+   pool ampio di 32 simboli + selezione casuale del sottoinsieme usato
+   + mescolamento completo delle posizioni in griglia. */
+function generateCoppie(area, diff, name) {
+  var symbolPool = ['🐶','🐱','🐰','🦊','🐻','🐼','🐸','🐵','🦁','🐷','🐨','🐯','🦉','🐢','🐳','⭐','🌸','🍎','🍊','🍇','🌙','☀️','⚽','🎈','🚗','🚀','❤️','🔵','🟢','🟡','🎵','🍀'];
+  var gridCfg = {
+    explorer:  { rows:4, cols:4 },
+    curious:   { rows:5, cols:6 },
+    growing:   { rows:6, cols:6 },
+    challenge: { rows:6, cols:8 }
+  };
+  var cfg = gridCfg[diff] || gridCfg.curious;
+  var totalCells = cfg.rows*cfg.cols;
+  var numPairs = Math.floor(totalCells/2);
+
+  var shuffledPool = symbolPool.slice().sort(function(){ return rng()-0.5; });
+  var chosenSymbols = shuffledPool.slice(0, numPairs);
+  var deck=[], i;
+  for (i=0;i<numPairs;i++) { deck.push(chosenSymbols[i]); deck.push(chosenSymbols[i]); }
+  if (deck.length < totalCells) deck.push(chosenSymbols[0]);
+  deck.sort(function(){ return rng()-0.5; });
+
+  var container=document.createElement('div'); container.className='count-grid';
+  var idx=0, r, col;
+  for (r=0;r<cfg.rows;r++){
+    var rowDiv=document.createElement('div'); rowDiv.className='count-grid-row';
+    for (col=0;col<cfg.cols;col++){
+      var cell=document.createElement('div'); cell.className='count-cell'; cell.textContent=deck[idx]; idx++;
+      rowDiv.appendChild(cell);
+    }
+    container.appendChild(rowDiv);
+  }
+
+  var ruleDiv=document.createElement('div'); ruleDiv.className='path-rule';
+  ruleDiv.textContent = 'Cerchia con la matita ogni coppia di simboli identici che trovi!';
+  var card=makeCard('Trova le coppie','Ci sono ' + numPairs + ' coppie nascoste nella griglia: trovale tutte!',name);
+  card.appendChild(ruleDiv);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzione per il genitore: ci sono ' + numPairs + ' coppie in totale.';
+  card.appendChild(key);
+
+  addGuideBtn(card,'pairs');
+  area.appendChild(card);
+}
+
+/* ==================== INTRUSO ====================
+   Rivalutata e reintrodotta in v15 su pool di categorie a emoji (zero
+   rischio di precisione grafica, solo testo/emoji). Fonti di
+   variabilita': pool di 7 categorie x 6-8 membri + categoria bersaglio
+   casuale + membri campionati a caso + categoria/membro dell'intruso
+   casuali + ordine finale mescolato. Per le fasce piu' piccole la
+   categoria viene rivelata come aiuto; per le fasce piu' grandi va
+   dedotta, aumentando la difficolta' reale. */
+function generateIntruso(area, diff, name) {
+  var categories = {
+    'frutta':    ['🍎','🍊','🍇','🍌','🍓','🍒','🍍','🥝'],
+    'animali':   ['🐶','🐱','🐰','🦊','🐻','🐼','🦁','🐯'],
+    'veicoli':   ['🚗','🚕','🚙','🚌','🚓','🚑','🚒','🚚'],
+    'vestiti':   ['👕','👖','🧦','🧤','👗','🧥','🧢','👟'],
+    'strumenti musicali': ['🎸','🥁','🎺','🎻','🎹','🎷','🪕','🎤'],
+    'meteo':     ['☀️','🌙','⭐','☁️','🌈','⚡','❄️','🌧️'],
+    'dolci':     ['🍦','🍩','🍪','🎂','🍫','🍭','🧁','🍬']
+  };
+  var catNames = Object.keys(categories);
+  var mainCat = catNames[Math.floor(rng()*catNames.length)];
+  var otherCats = [];
+  var ci;
+  for (ci=0;ci<catNames.length;ci++) if (catNames[ci]!==mainCat) otherCats.push(catNames[ci]);
+  var intruderCat = otherCats[Math.floor(rng()*otherCats.length)];
+
+  var lengthCfg = { explorer:4, curious:5, growing:6, challenge:7 };
+  var groupSize = lengthCfg[diff] || 5;
+
+  var mainMembers = categories[mainCat].slice().sort(function(){ return rng()-0.5; });
+  var chosenMembers = mainMembers.slice(0, groupSize);
+  var intruderMembers = categories[intruderCat];
+  var intruderItem = intruderMembers[Math.floor(rng()*intruderMembers.length)];
+
+  var items = chosenMembers.slice();
+  items.push(intruderItem);
+  var order=[]; var oi;
+  for (oi=0;oi<items.length;oi++) order.push(oi);
+  order.sort(function(){ return rng()-0.5; });
+
+  var row=document.createElement('div'); row.className='rule-row';
+  var intruderPosition=-1, oi2;
+  for (oi2=0;oi2<order.length;oi2++){
+    var itemIdx = order[oi2];
+    var cell=document.createElement('div'); cell.className='rule-item'; cell.textContent = items[itemIdx];
+    row.appendChild(cell);
+    if (itemIdx === items.length-1) intruderPosition = oi2+1;
+  }
+
+  var showHint = (diff==='explorer' || diff==='curious');
+  var ruleText = showHint ? ('Un elemento non fa parte della categoria "' + mainCat + '": quale?') : 'Un elemento non appartiene al gruppo degli altri: trova quale, e perché!';
+  var ruleDiv=document.createElement('div'); ruleDiv.className='path-rule'; ruleDiv.textContent=ruleText;
+
+  var card=makeCard('Trova l\'intruso','Osserva bene gli elementi e cerchia quello che non c\'entra!',name);
+  card.appendChild(ruleDiv);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(row); card.appendChild(wrap.outer);
+
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzione per il genitore: l\'intruso è ' + intruderItem + ' (posizione ' + intruderPosition + '), perché gli altri appartengono alla categoria "' + mainCat + '".';
+  card.appendChild(key);
+
+  addGuideBtn(card,'oddone');
+  area.appendChild(card);
+}
+
+/* ==================== TROVA LE DIFFERENZE ====================
+   Rivalutata dall'elenco delle schede rimosse in v7 e reintrodotta in
+   v15 in forma astratta (due griglie di forme colorate affiancate),
+   NON come scenetta illustrata — evita cosi' il rischio di precisione
+   grafica scadente discusso con Salvo. Fonti di variabilita': forma e
+   colore casuali per ogni cella della griglia base + posizioni delle
+   differenze scelte a caso + nuovo valore della differenza garantito
+   diverso dall'originale + dimensione griglia/numero differenze
+   variabile per fascia. */
+function generateDifferences(area, diff, name) {
+  var shapesPool = ['●','■','▲','★','♥'];
+  var colorPalette = ['#e05f8e','#4a90d9','#4caf7d','#f47c2f','#7c5cbf','#c99a2e'];
+  var gridCfg = {
+    explorer:  { size:4, diffs:3 },
+    curious:   { size:5, diffs:4 },
+    growing:   { size:6, diffs:5 },
+    challenge: { size:7, diffs:6 }
+  };
+  var cfg = gridCfg[diff] || gridCfg.curious;
+  var n = cfg.size;
+
+  var gridA=[], r, col;
+  for (r=0;r<n;r++){
+    var row=[];
+    for (col=0;col<n;col++){
+      row.push({ shape: shapesPool[Math.floor(rng()*shapesPool.length)], color: colorPalette[Math.floor(rng()*colorPalette.length)] });
+    }
+    gridA.push(row);
+  }
+  var gridB=[];
+  for (r=0;r<n;r++) gridB.push(gridA[r].slice());
+
+  var diffPositions=[], used={};
+  while (diffPositions.length < cfg.diffs) {
+    var dr=Math.floor(rng()*n), dc=Math.floor(rng()*n);
+    var dkey=dr+'_'+dc;
+    if (used[dkey]) continue;
+    used[dkey]=true;
+    var orig = gridA[dr][dc];
+    var newShape, newColor, tries=0;
+    do {
+      newShape = shapesPool[Math.floor(rng()*shapesPool.length)];
+      newColor = colorPalette[Math.floor(rng()*colorPalette.length)];
+      tries++;
+    } while ((newShape===orig.shape && newColor===orig.color) && tries<50);
+    gridB[dr][dc] = { shape:newShape, color:newColor };
+    diffPositions.push({r:dr, c:dc});
+  }
+
+  function buildGridEl(grid, label) {
+    var gWrap=document.createElement('div'); gWrap.className='diff-single';
+    var labelDiv=document.createElement('div'); labelDiv.className='diff-label-badge'; labelDiv.textContent=label;
+    var g=document.createElement('div'); g.className='cancel-grid';
+    var rr, cc;
+    for (rr=0; rr<n; rr++){
+      var rowDiv=document.createElement('div'); rowDiv.className='cancel-grid-row';
+      for (cc=0; cc<n; cc++){
+        var cell=document.createElement('div'); cell.className='cancel-cell';
+        cell.style.color = grid[rr][cc].color;
+        cell.textContent = grid[rr][cc].shape;
+        rowDiv.appendChild(cell);
+      }
+      g.appendChild(rowDiv);
+    }
+    gWrap.appendChild(labelDiv);
+    gWrap.appendChild(g);
+    return gWrap;
+  }
+
+  var pairWrap=document.createElement('div'); pairWrap.className='diff-pair';
+  pairWrap.appendChild(buildGridEl(gridA, 'A'));
+  pairWrap.appendChild(buildGridEl(gridB, 'B'));
+
+  var ruleDiv=document.createElement('div'); ruleDiv.className='path-rule';
+  ruleDiv.textContent = 'Trova le ' + cfg.diffs + ' differenze tra il disegno A e il disegno B!';
+  var card=makeCard('Trova le differenze','Confronta con attenzione i due riquadri e cerchia ogni differenza che trovi.',name);
+  card.appendChild(ruleDiv);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(pairWrap); card.appendChild(wrap.outer);
+
+  var keyParts=[], ki;
+  for (ki=0;ki<diffPositions.length;ki++) keyParts.push('riga ' + (diffPositions[ki].r+1) + '-colonna ' + (diffPositions[ki].c+1));
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzione per il genitore — differenze in: ' + keyParts.join(', ') + '.';
+  card.appendChild(key);
+
+  addGuideBtn(card,'diff');
+  area.appendChild(card);
+}
+
+/* ==================== CALCOLO ====================
+   Prima scheda della categoria "pratica scolastica" della roadmap.
+   Fonti di variabilita': operazione scelta a caso per ogni singolo
+   problema (tra quelle ammesse per la fascia) + operandi randomizzati
+   entro un intervallo scalato per fascia + numero di problemi variabile.
+   Formato verticale in colonna per addizioni/sottrazioni (come si
+   esercita a scuola), orizzontale per moltiplicazioni/divisioni. */
+function randIntCalc(min, max) { return min + Math.floor(rng()*(max-min+1)); }
+
+function generateCalcolo(area, diff, name) {
+  var cfg = {
+    explorer:  { ops:['add'],                   addMin:1,  addMax:5,  mulMin:2, mulMax:5,  count:8  },
+    curious:   { ops:['add','sub'],              addMin:1,  addMax:20, mulMin:2, mulMax:6,  count:10 },
+    growing:   { ops:['add','sub','mul'],        addMin:10, addMax:99, mulMin:2, mulMax:10, count:12 },
+    challenge: { ops:['add','sub','mul','div'],  addMin:100,addMax:999,mulMin:2, mulMax:12, count:15 }
+  };
+  var c = cfg[diff] || cfg.curious;
+
+  var problems=[], answers=[], i;
+  for (i=0;i<c.count;i++){
+    var op = c.ops[Math.floor(rng()*c.ops.length)];
+    var a, b, ans;
+    if (op==='add') {
+      a = randIntCalc(c.addMin, c.addMax); b = randIntCalc(c.addMin, c.addMax); ans = a+b;
+    } else if (op==='sub') {
+      a = randIntCalc(c.addMin, c.addMax); b = randIntCalc(c.addMin, a); ans = a-b;
+    } else if (op==='mul') {
+      a = randIntCalc(c.mulMin, c.mulMax); b = randIntCalc(c.mulMin, c.mulMax); ans = a*b;
+    } else {
+      var q = randIntCalc(c.mulMin, c.mulMax), d = randIntCalc(c.mulMin, c.mulMax);
+      a = q*d; b = d; ans = q;
+    }
+    problems.push({op:op, a:a, b:b});
+    answers.push(ans);
+  }
+
+  var opSymbols = { add:'+', sub:'−', mul:'×', div:'÷' };
+  var container=document.createElement('div'); container.className='calc-grid';
+  for (i=0;i<problems.length;i++){
+    var p = problems[i];
+    var cell=document.createElement('div'); cell.className='calc-problem';
+    if (p.op==='add' || p.op==='sub') {
+      cell.innerHTML =
+        '<div class="calc-vertical">' +
+          '<div class="calc-num">' + p.a + '</div>' +
+          '<div class="calc-op-row"><span class="calc-op">' + opSymbols[p.op] + '</span><span class="calc-num">' + p.b + '</span></div>' +
+          '<div class="calc-line"></div>' +
+          '<div class="calc-answer-box"></div>' +
+        '</div>';
+    } else {
+      cell.innerHTML =
+        '<div class="calc-horizontal">' + p.a + ' ' + opSymbols[p.op] + ' ' + p.b + ' = <span class="calc-blank"></span></div>';
+    }
+    container.appendChild(cell);
+  }
+
+  var card=makeCard('Pratica di calcolo','Risolvi tutte le operazioni qui sotto!',name);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var keyParts=[];
+  for (i=0;i<answers.length;i++) keyParts.push((i+1) + ') ' + answers[i]);
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card,'calc');
+  area.appendChild(card);
+}
+
+/* ==================== TABELLINE ====================
+   Separata da "Calcolo" su richiesta esplicita di Salvo per motivi di
+   intuitivita': le tabelline sono un esercizio scolastico con
+   un'identita' propria e riconoscibile, diverso dal ripasso misto di
+   operazioni. Fonti di variabilita': tabellina scelta a caso ad ogni
+   generazione (entro un intervallo scalato per fascia) + ordine dei
+   moltiplicatori mescolato (non sequenziale) cosi' il bambino richiama
+   il singolo fatto numerico invece di recitare la sequenza a memoria. */
+function generateTabelline(area, diff, name) {
+  var cfg = {
+    explorer:  { tableMin:2, tableMax:3,  multMax:5,  count:5  },
+    curious:   { tableMin:2, tableMax:5,  multMax:10, count:8  },
+    growing:   { tableMin:2, tableMax:10, multMax:10, count:10 },
+    challenge: { tableMin:2, tableMax:12, multMax:12, count:12 }
+  };
+  var c = cfg[diff] || cfg.curious;
+  var table = randIntCalc(c.tableMin, c.tableMax);
+
+  var multipliers=[], i;
+  for (i=1;i<=c.multMax;i++) multipliers.push(i);
+  multipliers.sort(function(){ return rng()-0.5; });
+  var chosen = multipliers.slice(0, c.count);
+
+  var container=document.createElement('div'); container.className='calc-grid';
+  var answers=[];
+  for (i=0;i<chosen.length;i++){
+    var mult = chosen[i];
+    var ans = table*mult;
+    answers.push(ans);
+    var cell=document.createElement('div'); cell.className='calc-problem';
+    cell.innerHTML = '<div class="calc-horizontal">' + table + ' × ' + mult + ' = <span class="calc-blank"></span></div>';
+    container.appendChild(cell);
+  }
+
+  var card=makeCard('Tabelline','Esercitati con la tabellina del ' + table + '!',name);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var keyParts=[];
+  for (i=0;i<answers.length;i++) keyParts.push(table + '×' + chosen[i] + '=' + answers[i]);
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card,'tables');
   area.appendChild(card);
 }
