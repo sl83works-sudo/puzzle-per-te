@@ -452,7 +452,7 @@ function generateColor(area, diff, name) {
     wrap.inner.appendChild(img);
   };
   img.onerror = function() {
-    loading.textContent = 'Immagine non trovata. Controlla che il file ' + src + ' esista nella cartella /images/color/.';
+    loading.textContent = 'coming soon...';
     loading.style.color = '#e04f4f';
   };
   img.src = src;
@@ -638,14 +638,14 @@ function generatePath(area, diff, name) {
   }
 
   if (ruleType===0) {
-    ruleText = 'Segui solo i pallini di questo colore, dalla S alla E: <span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:'+targetColor+';vertical-align:middle;margin-left:4px;"></span>';
+    ruleText = 'Segui solo i pallini di questo colore, dalla P alla A: <span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:'+targetColor+';vertical-align:middle;margin-left:4px;"></span>';
     for (r=0;r<h;r++) for (c=0;c<w;c++){
       var k1=c+'_'+r;
       if (pathSet.hasOwnProperty(k1)) { grid[r][c].symbol='●'; grid[r][c].color=targetColor; }
       else { grid[r][c].symbol='●'; grid[r][c].color=colorPalette[Math.floor(rng()*colorPalette.length)]; }
     }
   } else {
-    ruleText = 'Segui le frecce dalla partenza (S) fino all\'arrivo (E)!';
+    ruleText = 'Segui le frecce dalla partenza (P) fino all\'arrivo (A)!';
     for (pi=0;pi<path.length-1;pi++){
       var cur=path[pi], next=path[pi+1];
       var dir = next.x>cur.x ? 'right' : (next.y<cur.y ? 'up' : 'down');
@@ -671,8 +671,8 @@ function generatePath(area, diff, name) {
       var cell=document.createElement('div'); cell.className='path-cell' + (ruleType===0 ? ' dot-cell' : '');
       var isStart = (c===path[0].x && r===path[0].y);
       var isEnd = (c===path[path.length-1].x && r===path[path.length-1].y);
-      if (isStart) { cell.classList.add('start'); cell.textContent='S'; }
-      else if (isEnd) { cell.classList.add('end'); cell.textContent='E'; }
+      if (isStart) { cell.classList.add('start'); cell.textContent='P'; }
+      else if (isEnd) { cell.classList.add('end'); cell.textContent='A'; }
       else {
         cell.textContent = grid[r][c].symbol;
         cell.style.color = grid[r][c].color;
@@ -1035,7 +1035,7 @@ function generateCoppie(area, diff, name) {
   }
 
   var ruleDiv=document.createElement('div'); ruleDiv.className='path-rule';
-  ruleDiv.textContent = 'Cerchia con la matita ogni coppia di simboli identici che trovi!';
+  ruleDiv.textContent = 'Trova ogni coppia di simboli identici e depennali (barrali con una riga) man mano che li trovi!';
   var card=makeCard('Trova le coppie','Ci sono ' + numPairs + ' coppie nascoste nella griglia: trovale tutte!',name);
   card.appendChild(ruleDiv);
   var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
