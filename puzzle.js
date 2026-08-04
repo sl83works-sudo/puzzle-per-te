@@ -70,7 +70,7 @@ var parentGuides = {
   oddone: 'Questa scheda allena la categorizzazione e il ragionamento per esclusione: il bambino deve prima capire cosa hanno in comune gli elementi del gruppo, poi trovare quello che non rispetta la regola. Per le fasce più piccole la categoria è indicata esplicitamente come aiuto; per le fasce più grandi va scoperta da soli, il che rende l\'esercizio più impegnativo di quanto sembri a prima vista.',
   diff: 'Questa scheda allena l\'attenzione selettiva e il confronto visivo sistematico: il bambino deve scandire i due riquadri in parallelo invece di guardarli separatamente. Suggerite di confrontare una riga alla volta tra i due disegni, invece di cercare "a occhio" su tutta la griglia in una volta.',
   calc: 'Questa scheda allena l\'automatismo di calcolo, utile sia a scuola sia nella vita quotidiana. Non serve cronometrare, specialmente le prime volte: l\'obiettivo è la correttezza, la velocità arriva con la pratica. Per le operazioni in colonna, ricordate al bambino di allineare bene le cifre per unità/decine/centinaia prima di sommare o sottrarre — è spesso la causa principale degli errori, non il calcolo in sé.',
-  tables: 'Questa scheda allena la memoria a lungo termine dei fatti numerici (le tabelline), non il ragionamento: l\'obiettivo è il richiamo automatico, non il "ricalcolo" ogni volta. Se il bambino conta ancora sulle dita o si aiuta con le addizioni ripetute, va benissimo così nelle prime fasi — è un passaggio naturale prima della memorizzazione vera. L\'ordine mescolato è voluto: se recita la tabellina in sequenza da capo ogni volta, probabilmente la sta ancora imparando "a canzoncina" invece che a memoria vera, ed è un segnale utile per voi genitori.',
+  tables: 'Questa scheda allena la memoria a lungo termine dei fatti numerici (le tabelline), non il ragionamento: l\'obiettivo è il richiamo automatico, non il "ricalcolo" ogni volta. Le tabelline sono mescolate tra loro apposta, non una alla volta in ordine: così il bambino richiama ogni fatto singolarmente invece di sfruttare la sequenza per indovinare il successivo. Se il bambino conta ancora sulle dita o si aiuta con le addizioni ripetute, va benissimo così nelle prime fasi — è un passaggio naturale prima della memorizzazione vera.',
   anagram: 'Questa scheda allena la consapevolezza fonologica e ortografica: il bambino deve riconoscere una parola indipendentemente dall\'ordine delle lettere, il che rinforza la sua rappresentazione mentale della parola stessa. Suggerite di leggere le lettere ad alta voce una alla volta prima di provare a ricomporle, e di partire dalle lettere che "sembrano familiari" insieme (es. sillabe comuni). Per le fasce più piccole l\'iniziale della parola è indicata come aiuto: se il bambino la ignora e prova comunque a indovinare a caso, è utile fargliela notare esplicitamente.',
   missingletter: 'Questa scheda allena la memoria ortografica: il bambino deve richiamare come si scrive una parola, non solo riconoscerla. È un compito diverso e più impegnativo del semplice leggere. Se il bambino resta bloccato, fatelo pronunciare la parola intera ad alta voce, sillaba per sillaba: spesso il suono suggerisce la lettera mancante meglio di quanto non faccia guardare lo spazio vuoto sulla carta.'
 };
@@ -1280,35 +1280,40 @@ function generateCalcolo(area, diff, name) {
    il singolo fatto numerico invece di recitare la sequenza a memoria. */
 function generateTabelline(area, diff, name) {
   var cfg = {
-    explorer:  { tableMin:2, tableMax:3,  multMax:5,  count:5  },
-    curious:   { tableMin:2, tableMax:5,  multMax:10, count:8  },
-    growing:   { tableMin:2, tableMax:10, multMax:10, count:10 },
-    challenge: { tableMin:2, tableMax:12, multMax:12, count:12 }
+    explorer:  { tableMax:3,  multMax:5,  count:6  },
+    curious:   { tableMax:12, multMax:10, count:8  },
+    growing:   { tableMax:12, multMax:10, count:10 },
+    challenge: { tableMax:12, multMax:12, count:12 }
   };
   var c = cfg[diff] || cfg.curious;
-  var table = randIntCalc(c.tableMin, c.tableMax);
 
-  var multipliers=[], i;
-  for (i=1;i<=c.multMax;i++) multipliers.push(i);
-  multipliers.sort(function(){ return rng()-0.5; });
-  var chosen = multipliers.slice(0, c.count);
+  var used={}, problems=[], tries=0;
+  while (problems.length < c.count && tries < 500) {
+    tries++;
+    var table = randIntCalc(2, c.tableMax);
+    var mult = randIntCalc(1, c.multMax);
+    var key = table + '_' + mult;
+    if (used[key]) continue;
+    used[key] = true;
+    problems.push({ table:table, mult:mult });
+  }
 
   var container=document.createElement('div'); container.className='calc-grid';
-  var answers=[];
-  for (i=0;i<chosen.length;i++){
-    var mult = chosen[i];
-    var ans = table*mult;
+  var answers=[], i;
+  for (i=0;i<problems.length;i++){
+    var p = problems[i];
+    var ans = p.table*p.mult;
     answers.push(ans);
     var cell=document.createElement('div'); cell.className='calc-problem';
-    cell.innerHTML = '<div class="calc-horizontal">' + table + ' × ' + mult + ' = <span class="calc-blank"></span></div>';
+    cell.innerHTML = '<div class="calc-horizontal">' + p.table + ' × ' + p.mult + ' = <span class="calc-blank"></span></div>';
     container.appendChild(cell);
   }
 
-  var card=makeCard('Tabelline','Esercitati con la tabellina del ' + table + '!',name);
+  var card=makeCard('Tabelline','Esercitati con le tabelline!',name);
   var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
 
   var keyParts=[];
-  for (i=0;i<answers.length;i++) keyParts.push(table + '×' + chosen[i] + '=' + answers[i]);
+  for (i=0;i<problems.length;i++) keyParts.push(problems[i].table + '×' + problems[i].mult + '=' + answers[i]);
   var key=document.createElement('div'); key.className='answer-key';
   key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
   card.appendChild(key);
