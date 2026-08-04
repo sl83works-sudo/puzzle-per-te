@@ -120,7 +120,7 @@ canvas { display: block; border-radius: 8px; border: 1.5px solid var(--c-border)
 .diff-label-badge { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--c-purple); margin-bottom: 0.5rem; }
 
 /* CALCOLO */
-.calc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 14px; width: 100%; }
+.calc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 14px; width: 620px; max-width: 100%; }
 .calc-problem { border: 1.5px solid var(--c-border); border-radius: 10px; padding: 10px; background: #fafafa; display: flex; align-items: center; justify-content: center; min-height: 90px; }
 .calc-vertical { text-align: right; font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: var(--c-text); }
 .calc-op-row { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
