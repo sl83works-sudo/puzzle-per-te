@@ -39,6 +39,8 @@ function generate() {
   else if (currentType === 'diff') generateDifferences(area, diff, name);
   else if (currentType === 'calc') generateCalcolo(area, diff, name);
   else if (currentType === 'tables') generateTabelline(area, diff, name);
+  else if (currentType === 'anagram') generateAnagrammi(area, diff, name);
+  else if (currentType === 'missingletter') generateLetteraMancante(area, diff, name);
 }
 
 function makeCard(title, subtitle, name) {
@@ -68,7 +70,9 @@ var parentGuides = {
   oddone: 'Questa scheda allena la categorizzazione e il ragionamento per esclusione: il bambino deve prima capire cosa hanno in comune gli elementi del gruppo, poi trovare quello che non rispetta la regola. Per le fasce più piccole la categoria è indicata esplicitamente come aiuto; per le fasce più grandi va scoperta da soli, il che rende l\'esercizio più impegnativo di quanto sembri a prima vista.',
   diff: 'Questa scheda allena l\'attenzione selettiva e il confronto visivo sistematico: il bambino deve scandire i due riquadri in parallelo invece di guardarli separatamente. Suggerite di confrontare una riga alla volta tra i due disegni, invece di cercare "a occhio" su tutta la griglia in una volta.',
   calc: 'Questa scheda allena l\'automatismo di calcolo, utile sia a scuola sia nella vita quotidiana. Non serve cronometrare, specialmente le prime volte: l\'obiettivo è la correttezza, la velocità arriva con la pratica. Per le operazioni in colonna, ricordate al bambino di allineare bene le cifre per unità/decine/centinaia prima di sommare o sottrarre — è spesso la causa principale degli errori, non il calcolo in sé.',
-  tables: 'Questa scheda allena la memoria a lungo termine dei fatti numerici (le tabelline), non il ragionamento: l\'obiettivo è il richiamo automatico, non il "ricalcolo" ogni volta. Se il bambino conta ancora sulle dita o si aiuta con le addizioni ripetute, va benissimo così nelle prime fasi — è un passaggio naturale prima della memorizzazione vera. L\'ordine mescolato è voluto: se recita la tabellina in sequenza da capo ogni volta, probabilmente la sta ancora imparando "a canzoncina" invece che a memoria vera, ed è un segnale utile per voi genitori.'
+  tables: 'Questa scheda allena la memoria a lungo termine dei fatti numerici (le tabelline), non il ragionamento: l\'obiettivo è il richiamo automatico, non il "ricalcolo" ogni volta. Se il bambino conta ancora sulle dita o si aiuta con le addizioni ripetute, va benissimo così nelle prime fasi — è un passaggio naturale prima della memorizzazione vera. L\'ordine mescolato è voluto: se recita la tabellina in sequenza da capo ogni volta, probabilmente la sta ancora imparando "a canzoncina" invece che a memoria vera, ed è un segnale utile per voi genitori.',
+  anagram: 'Questa scheda allena la consapevolezza fonologica e ortografica: il bambino deve riconoscere una parola indipendentemente dall\'ordine delle lettere, il che rinforza la sua rappresentazione mentale della parola stessa. Suggerite di leggere le lettere ad alta voce una alla volta prima di provare a ricomporle, e di partire dalle lettere che "sembrano familiari" insieme (es. sillabe comuni). Per le fasce più piccole l\'iniziale della parola è indicata come aiuto: se il bambino la ignora e prova comunque a indovinare a caso, è utile fargliela notare esplicitamente.',
+  missingletter: 'Questa scheda allena la memoria ortografica: il bambino deve richiamare come si scrive una parola, non solo riconoscerla. È un compito diverso e più impegnativo del semplice leggere. Se il bambino resta bloccato, fatelo pronunciare la parola intera ad alta voce, sillaba per sillaba: spesso il suono suggerisce la lettera mancante meglio di quanto non faccia guardare lo spazio vuoto sulla carta.'
 };
 
 function showGuide(type) {
@@ -204,14 +208,19 @@ function generateMaze(area, diff, name) {
 }
 
 /* ==================== CERCA PAROLE ==================== */
+/* Vocabolario condiviso: usato sia da generateWordSearch sia da
+   generateAnagrammi. Se si aggiungono/tolgono parole, verificare che
+   generateAnagrammi abbia ancora abbastanza parole entro i suoi limiti
+   di lunghezza per ogni fascia (vedi il generatore per i dettagli). */
+var WORD_VOCAB = {
+  explorer:['CANE','GATTO','SOLE','LUNA','MARE','FIORE','RANA','PANE','MELA','PERA','UOVO','LUCE','NASO','MANO','CASA','PORTA','LAGO','PINO','ROSA','ORSO','LUPO','ANATRA','TOPO','GALLO','CAPRA','DADO','PALLA','LETTO','FICO','UVA','RISO','ARCO','VASO','SEDIA','KIWI','ORCA','VOLPE','LEPRE','AQUILA','CIGNO'],
+  curious:['FARFALLA','CONIGLIO','CASTELLO','GIRAFFA','ELEFANTE','TARTARUGA','DELFINO','PINGUINO','COCCODRILLO','PAPPAGALLO','LEONESSA','SERPENTE','PANTERA','GORILLA','GHEPARDO','STRUZZO','PAVONE','GABBIANO','RONDINE','PICCHIO','LONTRA','CASTORO','FRAGOLA','LAMPONE','MIRTILLO','ANANAS','MELONE','ARANCIA','LIMONE','AVOCADO','MONTAGNA','VULCANO','FORESTA','PORCOSPINO','PROCIONE','PIRANHA','ARAGOSTA','GRANCHIO','MEDUSA','CAPIBARA'],
+  growing:['TIRANNOSAURO','PTERODATTILO','TRICERATOPO','STEGOSAURO','VELOCIRAPTOR','DIPLODOCO','MEGALODONTE','CHIMPANZE','ORANGUTAN','MANDRILLO','CAMOSCIO','STAMBECCO','CARIBU','BISONTE','ANACONDA','PITONE','MAMBA','COBRA','CONDOR','FENICOTTERO','TUCANO','PLATESSA','SALMONE','STORIONE','CARAPACE','TENTACOLO','CLOROFILLA','ASTEROIDE','COSTELLAZIONE','GALASSIA','NEBULOSA','SUPERNOVA','PRISMA','TELESCOPIO','MICROSCOPIO','CIOCCOLATO','MARMELLATA','PASTICCERIA','GELATERIA','ORCHESTRA'],
+  challenge:['BIOLUMINESCENZA','FOTOSINTESI','METAMORFOSI','IBERNAZIONE','MIMETISMO','ECOSISTEMA','BIODIVERSITA','VULCANOLOGIA','PALEONTOLOGIA','ENTOMOLOGIA','NEUROSCIENZE','CRITTOGRAFIA','ALGORITMO','INTELLIGENZA','TERMODINAMICA','NANOTECNOLOGIA','BIOTECNOLOGIA','ARCHEOLOGIA','COSMOLOGIA','ASTROFISICA','BIOINFORMATICA','IMMUNOLOGIA','MICROBIOLOGIA','GEOMORFOLOGIA','CLIMATOLOGIA','OCEANOGRAFIA','SISMOLOGIA','GLACIOLOGIA','FITOCHIMICA','ZOOPLANCTON','CLOROFILLA','MITOCONDRIO','CROMOSOMA','RIBOSOMA','PROTEINA','ENZIMA','CATALIZZATORE','POLIMERO','ELETTROLITA','CRISTALLOGRAFIA']
+};
+
 function generateWordSearch(area, diff, name) {
-  var vocab={
-    explorer:['CANE','GATTO','SOLE','LUNA','MARE','FIORE','RANA','PANE','MELA','PERA','UOVO','LUCE','NASO','MANO','CASA','PORTA','LAGO','PINO','ROSA','ORSO','LUPO','ANATRA','TOPO','GALLO','CAPRA','DADO','PALLA','LETTO','FICO','UVA','RISO','ARCO','VASO','SEDIA','KIWI','ORCA','VOLPE','LEPRE','AQUILA','CIGNO'],
-    curious:['FARFALLA','CONIGLIO','CASTELLO','GIRAFFA','ELEFANTE','TARTARUGA','DELFINO','PINGUINO','COCCODRILLO','PAPPAGALLO','LEONESSA','SERPENTE','PANTERA','GORILLA','GHEPARDO','STRUZZO','PAVONE','GABBIANO','RONDINE','PICCHIO','LONTRA','CASTORO','FRAGOLA','LAMPONE','MIRTILLO','ANANAS','MELONE','ARANCIA','LIMONE','AVOCADO','MONTAGNA','VULCANO','FORESTA','PORCOSPINO','PROCIONE','PIRANHA','ARAGOSTA','GRANCHIO','MEDUSA','CAPIBARA'],
-    growing:['TIRANNOSAURO','PTERODATTILO','TRICERATOPO','STEGOSAURO','VELOCIRAPTOR','DIPLODOCO','MEGALODONTE','CHIMPANZE','ORANGUTAN','MANDRILLO','CAMOSCIO','STAMBECCO','CARIBU','BISONTE','ANACONDA','PITONE','MAMBA','COBRA','CONDOR','FENICOTTERO','TUCANO','PLATESSA','SALMONE','STORIONE','CARAPACE','TENTACOLO','CLOROFILLA','ASTEROIDE','COSTELLAZIONE','GALASSIA','NEBULOSA','SUPERNOVA','PRISMA','TELESCOPIO','MICROSCOPIO','CIOCCOLATO','MARMELLATA','PASTICCERIA','GELATERIA','ORCHESTRA'],
-    challenge:['BIOLUMINESCENZA','FOTOSINTESI','METAMORFOSI','IBERNAZIONE','MIMETISMO','ECOSISTEMA','BIODIVERSITA','VULCANOLOGIA','PALEONTOLOGIA','ENTOMOLOGIA','NEUROSCIENZE','CRITTOGRAFIA','ALGORITMO','INTELLIGENZA','TERMODINAMICA','NANOTECNOLOGIA','BIOTECNOLOGIA','ARCHEOLOGIA','COSMOLOGIA','ASTROFISICA','BIOINFORMATICA','IMMUNOLOGIA','MICROBIOLOGIA','GEOMORFOLOGIA','CLIMATOLOGIA','OCEANOGRAFIA','SISMOLOGIA','GLACIOLOGIA','FITOCHIMICA','ZOOPLANCTON','CLOROFILLA','MITOCONDRIO','CROMOSOMA','RIBOSOMA','PROTEINA','ENZIMA','CATALIZZATORE','POLIMERO','ELETTROLITA','CRISTALLOGRAFIA']
-  };
-  var pool=(vocab[diff]||vocab['curious']).slice().sort(function(){return rng()-0.5;});
+  var pool=(WORD_VOCAB[diff]||WORD_VOCAB['curious']).slice().sort(function(){return rng()-0.5;});
   var maxLen=diff==='explorer'?5:diff==='curious'?9:diff==='growing'?13:18;
   var minLen=diff==='explorer'?3:diff==='curious'?5:diff==='growing'?7:9;
   var selected=[];
@@ -1305,5 +1314,144 @@ function generateTabelline(area, diff, name) {
   card.appendChild(key);
 
   addGuideBtn(card,'tables');
+  area.appendChild(card);
+}
+
+/* ==================== ANAGRAMMI ====================
+   Prima scheda della categoria "linguistico" della roadmap. Riusa
+   WORD_VOCAB (lo stesso vocabolario di generateWordSearch) invece di
+   duplicare le liste di parole. Fonti di variabilita': selezione
+   casuale del sottoinsieme di parole + mescolamento completo delle
+   lettere per ciascuna (con garanzia che il risultato sia sempre
+   diverso dalla parola originale) + numero di parole/lunghezza massima
+   variabile per fascia. */
+function scrambleWord(word) {
+  var letters = word.split('');
+  var scrambled, tries = 0;
+  do {
+    var arr = letters.slice();
+    arr.sort(function(){ return rng()-0.5; });
+    scrambled = arr.join('');
+    tries++;
+  } while (scrambled === word && tries < 20);
+  return scrambled;
+}
+
+function generateAnagrammi(area, diff, name) {
+  var pool = (WORD_VOCAB[diff] || WORD_VOCAB.curious).slice().sort(function(){ return rng()-0.5; });
+  var countCfg = { explorer:5, curious:8, growing:10, challenge:12 };
+  var count = countCfg[diff] || 8;
+  var maxLenCfg = { explorer:5, curious:7, growing:10, challenge:13 };
+  var maxLen = maxLenCfg[diff] || 7;
+
+  var selected=[], pi;
+  for (pi=0; pi<pool.length && selected.length<count; pi++) {
+    if (pool[pi].length <= maxLen) selected.push(pool[pi]);
+  }
+  if (selected.length < count) selected = pool.slice(0, count);
+
+  var showHint = (diff==='explorer' || diff==='curious');
+
+  var container=document.createElement('div'); container.className='anagram-list';
+  var i, j;
+  for (i=0; i<selected.length; i++){
+    var word = selected[i];
+    var scrambled = scrambleWord(word);
+    var row=document.createElement('div'); row.className='anagram-row';
+
+    var tiles=document.createElement('div'); tiles.className='anagram-tiles';
+    for (j=0;j<scrambled.length;j++){
+      var tile=document.createElement('div'); tile.className='anagram-tile'; tile.textContent=scrambled[j];
+      tiles.appendChild(tile);
+    }
+    row.appendChild(tiles);
+
+    var arrow=document.createElement('div'); arrow.className='anagram-arrow'; arrow.textContent='→';
+    row.appendChild(arrow);
+
+    if (showHint) {
+      var hint=document.createElement('span'); hint.className='anagram-hint'; hint.textContent='(inizia con ' + word[0] + ')';
+      row.appendChild(hint);
+    }
+
+    var blank=document.createElement('div'); blank.className='anagram-blank';
+    row.appendChild(blank);
+
+    container.appendChild(row);
+  }
+
+  var card=makeCard('Anagrammi','Riordina le lettere per scoprire la parola nascosta!',name);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var keyParts=[];
+  for (i=0;i<selected.length;i++) keyParts.push((i+1) + ') ' + selected[i]);
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card,'anagram');
+  area.appendChild(card);
+}
+
+/* ==================== LETTERA MANCANTE ====================
+   Secondo pezzo della categoria "linguistico". Riusa WORD_VOCAB come
+   generateAnagrammi, ma invece di mescolare le lettere ne nasconde
+   alcune mantenendo l'ordine corretto — abilita complementare
+   (richiamo ortografico vs riordino). Fonti di variabilita':
+   selezione casuale delle parole + numero di lacune randomizzato
+   entro un intervallo per fascia + posizioni delle lacune scelte a
+   caso per ogni parola (non sempre le stesse, es. non sempre l'ultima
+   lettera). */
+function generateLetteraMancante(area, diff, name) {
+  var pool = (WORD_VOCAB[diff] || WORD_VOCAB.curious).slice().sort(function(){ return rng()-0.5; });
+  var countCfg = { explorer:5, curious:8, growing:10, challenge:12 };
+  var count = countCfg[diff] || 8;
+  var maxLenCfg = { explorer:6, curious:8, growing:11, challenge:14 };
+  var maxLen = maxLenCfg[diff] || 8;
+  var blankRangeCfg = { explorer:[1,1], curious:[1,2], growing:[2,3], challenge:[3,4] };
+  var blankRange = blankRangeCfg[diff] || [1,2];
+
+  var selected=[], pi;
+  for (pi=0; pi<pool.length && selected.length<count; pi++) {
+    if (pool[pi].length <= maxLen && pool[pi].length >= 3) selected.push(pool[pi]);
+  }
+  if (selected.length < count) selected = pool.slice(0, count);
+
+  var container=document.createElement('div'); container.className='anagram-list';
+  var i, j;
+  for (i=0;i<selected.length;i++){
+    var word = selected[i];
+    var wantBlanks = blankRange[0] + Math.floor(rng()*(blankRange[1]-blankRange[0]+1));
+    var maxBlanks = Math.max(1, word.length-2);
+    var numBlanks = Math.min(wantBlanks, maxBlanks);
+
+    var positions=[]; for (j=0;j<word.length;j++) positions.push(j);
+    positions.sort(function(){ return rng()-0.5; });
+    var blankPositions = positions.slice(0, numBlanks);
+    var blankSet = {};
+    for (j=0;j<blankPositions.length;j++) blankSet[blankPositions[j]]=true;
+
+    var row=document.createElement('div'); row.className='anagram-row';
+    var tiles=document.createElement('div'); tiles.className='anagram-tiles';
+    for (j=0;j<word.length;j++){
+      var tile=document.createElement('div'); tile.className='anagram-tile';
+      if (blankSet[j]) { tile.classList.add('blank'); }
+      else { tile.textContent = word[j]; }
+      tiles.appendChild(tile);
+    }
+    row.appendChild(tiles);
+    container.appendChild(row);
+  }
+
+  var card=makeCard('Lettera mancante','Scopri quali lettere mancano e completa ogni parola!',name);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var keyParts=[];
+  for (i=0;i<selected.length;i++) keyParts.push((i+1) + ') ' + selected[i]);
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card,'missingletter');
   area.appendChild(card);
 }
