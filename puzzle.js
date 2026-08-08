@@ -1280,10 +1280,10 @@ function generateCalcolo(area, diff, name) {
    il singolo fatto numerico invece di recitare la sequenza a memoria. */
 function generateTabelline(area, diff, name) {
   var cfg = {
-    explorer:  { tableMax:3,  multMax:5,  count:6  },
-    curious:   { tableMax:12, multMax:10, count:8  },
-    growing:   { tableMax:12, multMax:10, count:10 },
-    challenge: { tableMax:12, multMax:12, count:12 }
+    explorer:  { tableMax:3,  multMax:10, count:10 },
+    curious:   { tableMax:12, multMax:10, count:15 },
+    growing:   { tableMax:12, multMax:10, count:15 },
+    challenge: { tableMax:12, multMax:12, count:15 }
   };
   var c = cfg[diff] || cfg.curious;
 
