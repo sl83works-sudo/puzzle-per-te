@@ -41,6 +41,10 @@ function generate() {
   else if (currentType === 'tables') generateTabelline(area, diff, name);
   else if (currentType === 'anagram') generateAnagrammi(area, diff, name);
   else if (currentType === 'missingletter') generateLetteraMancante(area, diff, name);
+  else if (currentType === 'pregraf') generatePregrafismo(area, diff, name);
+  else if (currentType === 'picross') generatePicross(area, diff, name);
+  else if (currentType === 'synant') generateSinonimiContrari(area, diff, name);
+  else if (currentType === 'sentence') generateOrdinaFrase(area, diff, name);
 }
 
 function makeCard(title, subtitle, name) {
@@ -72,7 +76,11 @@ var parentGuides = {
   calc: 'Questa scheda allena l\'automatismo di calcolo, utile sia a scuola sia nella vita quotidiana. Non serve cronometrare, specialmente le prime volte: l\'obiettivo è la correttezza, la velocità arriva con la pratica. Per le operazioni in colonna, ricordate al bambino di allineare bene le cifre per unità/decine/centinaia prima di sommare o sottrarre — è spesso la causa principale degli errori, non il calcolo in sé.',
   tables: 'Questa scheda allena la memoria a lungo termine dei fatti numerici (le tabelline), non il ragionamento: l\'obiettivo è il richiamo automatico, non il "ricalcolo" ogni volta. Le tabelline sono mescolate tra loro apposta, non una alla volta in ordine: così il bambino richiama ogni fatto singolarmente invece di sfruttare la sequenza per indovinare il successivo. Se il bambino conta ancora sulle dita o si aiuta con le addizioni ripetute, va benissimo così nelle prime fasi — è un passaggio naturale prima della memorizzazione vera.',
   anagram: 'Questa scheda allena la consapevolezza fonologica e ortografica: il bambino deve riconoscere una parola indipendentemente dall\'ordine delle lettere, il che rinforza la sua rappresentazione mentale della parola stessa. Suggerite di leggere le lettere ad alta voce una alla volta prima di provare a ricomporle, e di partire dalle lettere che "sembrano familiari" insieme (es. sillabe comuni). Per le fasce più piccole l\'iniziale della parola è indicata come aiuto: se il bambino la ignora e prova comunque a indovinare a caso, è utile fargliela notare esplicitamente.',
-  missingletter: 'Questa scheda allena la memoria ortografica: il bambino deve richiamare come si scrive una parola, non solo riconoscerla. È un compito diverso e più impegnativo del semplice leggere. Se il bambino resta bloccato, fatelo pronunciare la parola intera ad alta voce, sillaba per sillaba: spesso il suono suggerisce la lettera mancante meglio di quanto non faccia guardare lo spazio vuoto sulla carta.'
+  missingletter: 'Questa scheda allena la memoria ortografica: il bambino deve richiamare come si scrive una parola, non solo riconoscerla. È un compito diverso e più impegnativo del semplice leggere. Se il bambino resta bloccato, fatelo pronunciare la parola intera ad alta voce, sillaba per sillaba: spesso il suono suggerisce la lettera mancante meglio di quanto non faccia guardare lo spazio vuoto sulla carta.',
+  pregraf: 'Questa scheda allena la motricità fine e la coordinazione occhio-mano, le abilità di base che preparano alla scrittura vera e propria: il bambino ripassa con la matita linee, onde, cerchi e spirali tratteggiate. È pensata specificamente per la fascia 3-5 anni, quindi ignora volutamente la selezione dell\'età. Lasciate che tenga la matita con la presa più naturale per lui in questa fase, senza correggerlo troppo presto: conta il movimento fluido del polso, non la precisione millimetrica. Uscire dalla linea tratteggiata è normalissimo a questa età, non è un errore da segnalare.',
+  picross: 'Questa scheda introduce la logica a griglia: i numeri accanto a ogni riga e colonna indicano quante celle consecutive vanno colorate, e in quanti gruppi. Se una riga ha scritto "3 2" significa un blocco di 3 celle colorate, poi almeno una casella vuota, poi un blocco di 2. Colorando le celle giuste emerge un disegno a sorpresa! È logica deduttiva più impegnativa del solito: aiutate il bambino a partire dalle righe o colonne con i numeri più alti (spesso si deducono quasi subito) e a procedere per esclusione. Ogni scheda è verificata al computer prima di essere generata, per garantire che si risolva sempre con la sola logica, senza bisogno di indovinare.',
+  synant: 'Questa scheda allena il vocabolario collegando ogni parola al suo sinonimo (stesso significato) o contrario (significato opposto) — la scheda sceglie a caso quale delle due relazioni proporre, quindi controllate il sottotitolo prima di iniziare. Il bambino deve tracciare una linea tra la parola a sinistra e la risposta corretta a destra, che sono mescolate apposta. Se una parola non è familiare, è un\'ottima occasione per parlarne insieme: chiedete al bambino di provare a indovinare dal contesto o dal suono della parola prima di darvi la risposta.',
+  sentence: 'Questa scheda allena la sintassi: il bambino deve riordinare parole mescolate per formare una frase di senso compiuto, poi riscriverla sulla riga. Suggerite di leggere le parole ad alta voce in ordini diversi finché "non suona giusto" — l\'orecchio spesso riconosce l\'ordine corretto prima della logica esplicita. La lettera maiuscola indica sempre quale parola apre la frase, e il punto finale indica quale la chiude: sono indizi validi, non un imbroglio, fatene usare consapevolmente il bambino.'
 };
 
 function showGuide(type) {
@@ -1458,5 +1466,727 @@ function generateLetteraMancante(area, diff, name) {
   card.appendChild(key);
 
   addGuideBtn(card,'missingletter');
+  area.appendChild(card);
+}
+
+/* ==================== SINONIMI E CONTRARI ====================
+   Prima scheda della categoria "linguistica avanzata". A differenza di
+   Anagrammi/Lettera mancante (riempi lo spazio vuoto), qui il bambino
+   deve collegare con una linea due colonne — meccanismo diverso per
+   dare varieta' all'app. Fonti di variabilita': (1) pool di 12 coppie
+   parola/sinonimo/contrario per fascia; (2) selezione casuale del
+   sottoinsieme e del loro ordine; (3) scelta casuale ad ogni scheda se
+   lavorare su sinonimi o contrari (solo contrari per explorer, concetto
+   piu' intuitivo per i piccoli); (4) la colonna di destra viene
+   mescolata garantendo che NESSUna risposta resti sulla riga corretta
+   per puro caso (altrimenti sarebbe un aiuto gratuito). */
+var SYNANT_VOCAB = {
+  explorer: [
+    {word:'GRANDE', syn:'ENORME', ant:'PICCOLO'},
+    {word:'CALDO', syn:'BOLLENTE', ant:'FREDDO'},
+    {word:'ALTO', syn:'LUNGO', ant:'BASSO'},
+    {word:'VELOCE', syn:'RAPIDO', ant:'LENTO'},
+    {word:'FELICE', syn:'CONTENTO', ant:'TRISTE'},
+    {word:'FORTE', syn:'POTENTE', ant:'DEBOLE'},
+    {word:'PULITO', syn:'IMMACOLATO', ant:'SPORCO'},
+    {word:'PIENO', syn:'COLMO', ant:'VUOTO'},
+    {word:'CHIARO', syn:'LUMINOSO', ant:'SCURO'},
+    {word:'DOLCE', syn:'ZUCCHERINO', ant:'AMARO'},
+    {word:'DURO', syn:'RIGIDO', ant:'MORBIDO'},
+    {word:'NUOVO', syn:'RECENTE', ant:'VECCHIO'}
+  ],
+  curious: [
+    {word:'CORAGGIOSO', syn:'AUDACE', ant:'PAUROSO'},
+    {word:'GENEROSO', syn:'MUNIFICO', ant:'AVARO'},
+    {word:'SILENZIOSO', syn:'QUIETO', ant:'RUMOROSO'},
+    {word:'ORDINATO', syn:'METICOLOSO', ant:'DISORDINATO'},
+    {word:'GENTILE', syn:'CORTESE', ant:'SGARBATO'},
+    {word:'ONESTO', syn:'SINCERO', ant:'BUGIARDO'},
+    {word:'PAZIENTE', syn:'TOLLERANTE', ant:'IMPAZIENTE'},
+    {word:'CURIOSO', syn:'INTERESSATO', ant:'INDIFFERENTE'},
+    {word:'ALLEGRO', syn:'GIOIOSO', ant:'MALINCONICO'},
+    {word:'FACILE', syn:'SEMPLICE', ant:'DIFFICILE'},
+    {word:'RICCO', syn:'BENESTANTE', ant:'POVERO'},
+    {word:'LEGGERO', syn:'ESILE', ant:'PESANTE'}
+  ],
+  growing: [
+    {word:'PERSPICACE', syn:'ACUTO', ant:'OTTUSO'},
+    {word:'METICOLOSO', syn:'SCRUPOLOSO', ant:'TRASCURATO'},
+    {word:'TENACE', syn:'OSTINATO', ant:'ARRENDEVOLE'},
+    {word:'MAGNANIMO', syn:'GENEROSO', ant:'MESCHINO'},
+    {word:'LACONICO', syn:'CONCISO', ant:'PROLISSO'},
+    {word:'EFFIMERO', syn:'FUGACE', ant:'DURATURO'},
+    {word:'AUDACE', syn:'INTREPIDO', ant:'TIMOROSO'},
+    {word:'PROSPERO', syn:'FLORIDO', ant:'STENTATO'},
+    {word:'LUCIDO', syn:'RAZIONALE', ant:'CONFUSO'},
+    {word:'AUTENTICO', syn:'GENUINO', ant:'FASULLO'},
+    {word:'ARDUO', syn:'IMPERVIO', ant:'AGEVOLE'},
+    {word:'FERTILE', syn:'RIGOGLIOSO', ant:'ARIDO'}
+  ],
+  challenge: [
+    {word:'PERENTORIO', syn:'INDEROGABILE', ant:'OPZIONALE'},
+    {word:'EFFERATO', syn:'SPIETATO', ant:'MITE'},
+    {word:'PARSIMONIOSO', syn:'ECONOMO', ant:'DISPENDIOSO'},
+    {word:'IMPERSCRUTABILE', syn:'ENIGMATICO', ant:'TRASPARENTE'},
+    {word:'VERBOSO', syn:'PROLISSO', ant:'CONCISO'},
+    {word:'PERVICACE', syn:'OSTINATO', ant:'REMISSIVO'},
+    {word:'ALACRE', syn:'SOLERTE', ant:'SVOGLIATO'},
+    {word:'SARDONICO', syn:'BEFFARDO', ant:'BONARIO'},
+    {word:'INTRANSIGENTE', syn:'RIGIDO', ant:'ACCOMODANTE'},
+    {word:'MAGNILOQUENTE', syn:'ENFATICO', ant:'DIMESSO'},
+    {word:'PUSILLANIME', syn:'VILE', ant:'PRODE'},
+    {word:'ECLETTICO', syn:'POLIEDRICO', ant:'MONOCORDE'}
+  ]
+};
+
+function generateSinonimiContrari(area, diff, name) {
+  var pool = (SYNANT_VOCAB[diff] || SYNANT_VOCAB.curious).slice().sort(function(){ return rng()-0.5; });
+  var countCfg = { explorer:5, curious:6, growing:7, challenge:8 };
+  var count = Math.min(countCfg[diff] || 6, pool.length);
+  var selected = pool.slice(0, count);
+
+  var relationType = diff === 'explorer' ? 'ant' : (rng() < 0.5 ? 'syn' : 'ant');
+
+  var items = [], i;
+  for (i=0; i<selected.length; i++) {
+    items.push({ letter: String.fromCharCode(65+i), left: selected[i].word, right: selected[i][relationType] });
+  }
+
+  /* Mescolo la colonna di destra garantendo nessun punto fermo
+     (nessuna risposta resta sulla riga corretta per puro caso). */
+  var rightOrder, tries = 0, hasFixedPoint;
+  do {
+    rightOrder = items.slice().sort(function(){ return rng()-0.5; });
+    hasFixedPoint = false;
+    for (i=0; i<rightOrder.length; i++) { if (rightOrder[i] === items[i]) { hasFixedPoint = true; break; } }
+    tries++;
+  } while (hasFixedPoint && tries < 30);
+
+  var wrapDiv = document.createElement('div'); wrapDiv.className = 'synant-columns';
+
+  var colLeft = document.createElement('div'); colLeft.className = 'synant-col left';
+  for (i=0; i<items.length; i++) {
+    var rowL = document.createElement('div'); rowL.className = 'synant-item';
+    var tagL = document.createElement('span'); tagL.className = 'synant-tag'; tagL.textContent = items[i].letter + '.';
+    var textL = document.createElement('span'); textL.textContent = items[i].left;
+    var dotL = document.createElement('div'); dotL.className = 'synant-dot';
+    rowL.appendChild(tagL); rowL.appendChild(textL); rowL.appendChild(dotL);
+    colLeft.appendChild(rowL);
+  }
+
+  var colRight = document.createElement('div'); colRight.className = 'synant-col right';
+  for (i=0; i<rightOrder.length; i++) {
+    var rowR = document.createElement('div'); rowR.className = 'synant-item';
+    var dotR = document.createElement('div'); dotR.className = 'synant-dot';
+    var textR = document.createElement('span'); textR.textContent = rightOrder[i].right;
+    rowR.appendChild(dotR); rowR.appendChild(textR);
+    colRight.appendChild(rowR);
+  }
+
+  wrapDiv.appendChild(colLeft); wrapDiv.appendChild(colRight);
+
+  var subtitle = relationType === 'syn'
+    ? 'Collega ogni parola al suo SINONIMO (stesso significato)!'
+    : 'Collega ogni parola al suo CONTRARIO (significato opposto)!';
+  var card = makeCard('Sinonimi e Contrari', subtitle, name);
+  var wrap = makePrintWrap(); wrap.inner.appendChild(wrapDiv); card.appendChild(wrap.outer);
+
+  var keyParts = [];
+  for (i=0; i<items.length; i++) keyParts.push(items[i].letter + ') ' + items[i].left + ' → ' + items[i].right);
+  var key = document.createElement('div'); key.className = 'answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card, 'synant');
+  area.appendChild(card);
+}
+
+/* ==================== ORDINA LA FRASE ====================
+   Secondo pezzo della categoria "linguistica avanzata". Stesso
+   linguaggio visivo di Anagrammi (tessere mescolate + riga per
+   riscrivere) ma a livello di PAROLA invece che di lettera: allena
+   la sintassi invece dell'ortografia. Fonti di variabilita': (1)
+   pool di 12 frasi curate per fascia (lunghezza/complessita'
+   crescente); (2) selezione casuale del sottoinsieme; (3)
+   mescolamento delle parole per ciascuna frase, garantito sempre
+   diverso dall'ordine originale (stesso schema di scrambleWord). */
+var SENTENCE_VOCAB = {
+  explorer: [
+    "Il gatto dorme sul letto.",
+    "La mamma cucina la pasta.",
+    "Il sole splende nel cielo.",
+    "Io mangio una mela rossa.",
+    "Il cane corre nel prato.",
+    "La nonna legge un libro.",
+    "Il bimbo gioca con la palla.",
+    "Noi guardiamo le stelle di notte.",
+    "Il pesce nuota nel mare blu.",
+    "La farfalla vola sopra i fiori.",
+    "Il papà lava la macchina rossa.",
+    "Io bevo un bicchiere di latte."
+  ],
+  curious: [
+    "Ogni mattina il gallo canta nel cortile della fattoria.",
+    "La maestra spiega la lezione con grande pazienza.",
+    "Durante l'estate andiamo spesso al mare con gli amici.",
+    "Il pompiere ha spento l'incendio in poco tempo.",
+    "I bambini costruiscono un castello di sabbia sulla spiaggia.",
+    "Il nonno racconta sempre storie divertenti prima di dormire.",
+    "La squadra ha vinto la partita con grande entusiasmo.",
+    "Gli uccellini costruiscono il nido tra i rami dell'albero.",
+    "Ogni sera laviamo i denti prima di andare a letto.",
+    "Il fornaio prepara il pane fresco ogni mattina presto.",
+    "I ragazzi giocano a calcio nel campo vicino a scuola.",
+    "La pioggia ha bagnato tutte le strade della città."
+  ],
+  growing: [
+    "Gli scienziati hanno scoperto una nuova specie di farfalla tropicale.",
+    "Durante la gita scolastica abbiamo visitato un antico castello medievale.",
+    "Il fiume attraversa la valle formando piccole cascate cristalline.",
+    "I contadini raccolgono il grano maturo nei campi dorati d'estate.",
+    "L'astronauta ha osservato la Terra dalla finestra della navicella spaziale.",
+    "La biblioteca comunale organizza ogni settimana laboratori di lettura per ragazzi.",
+    "Gli esploratori hanno attraversato la foresta pluviale senza incontrare pericoli.",
+    "Il meccanico ha riparato il motore rotto in appena due ore.",
+    "La squadra di nuoto si allena ogni giorno prima delle lezioni.",
+    "Un arcobaleno colorato è apparso subito dopo il temporale estivo.",
+    "I ricercatori studiano il comportamento dei delfini nell'oceano Pacifico.",
+    "Il vulcano è rimasto silenzioso per più di cento anni."
+  ],
+  challenge: [
+    "Nonostante le previsioni avverse, gli alpinisti hanno raggiunto la vetta prima del tramonto.",
+    "L'archeologa ha rinvenuto un manufatto antico durante gli scavi nella valle sommersa.",
+    "Il governo ha approvato una nuova legge per tutelare le foreste pluviali minacciate.",
+    "Gli ingegneri hanno progettato un ponte sospeso capace di resistere ai forti terremoti.",
+    "La comunità scientifica discute animatamente le implicazioni etiche della clonazione genetica.",
+    "Dopo mesi di allenamento estenuante, l'atleta ha finalmente battuto il record mondiale.",
+    "I diplomatici hanno negoziato un accordo di pace dopo lunghe trattative internazionali.",
+    "L'astrofisica ha calcolato con precisione la distanza tra la Terra e quella galassia.",
+    "Il romanzo racconta la storia di un'esploratrice coraggiosa nell'Antartide inesplorata.",
+    "Le nuove tecnologie stanno trasformando radicalmente il modo in cui comunichiamo ogni giorno.",
+    "Il chirurgo ha eseguito un intervento delicato con l'aiuto di un braccio robotico.",
+    "Gli storici dibattono ancora sulle vere cause del declino di quell'antica civiltà."
+  ]
+};
+
+function scrambleSentence(words) {
+  var scrambled, tries = 0, original = words.join(' ');
+  do {
+    var arr = words.slice();
+    arr.sort(function(){ return rng()-0.5; });
+    scrambled = arr;
+    tries++;
+  } while (scrambled.join(' ') === original && tries < 20);
+  return scrambled;
+}
+
+function generateOrdinaFrase(area, diff, name) {
+  var pool = (SENTENCE_VOCAB[diff] || SENTENCE_VOCAB.curious).slice().sort(function(){ return rng()-0.5; });
+  var countCfg = { explorer:4, curious:5, growing:5, challenge:6 };
+  var count = Math.min(countCfg[diff] || 5, pool.length);
+  var selected = pool.slice(0, count);
+
+  var container = document.createElement('div'); container.className = 'sentence-list';
+  var i, j;
+  for (i=0; i<selected.length; i++) {
+    var words = selected[i].split(' ');
+    var scrambled = scrambleSentence(words);
+
+    var row = document.createElement('div'); row.className = 'sentence-row';
+
+    var tilesRow = document.createElement('div'); tilesRow.className = 'sentence-tiles';
+    var numLabel = document.createElement('span'); numLabel.className = 'sentence-number'; numLabel.textContent = (i+1) + '.';
+    tilesRow.appendChild(numLabel);
+    for (j=0; j<scrambled.length; j++) {
+      var tile = document.createElement('span'); tile.className = 'sentence-tile'; tile.textContent = scrambled[j];
+      tilesRow.appendChild(tile);
+    }
+    row.appendChild(tilesRow);
+
+    var blank = document.createElement('div'); blank.className = 'sentence-blank';
+    row.appendChild(blank);
+
+    container.appendChild(row);
+  }
+
+  var card = makeCard('Ordina la frase', 'Riordina le parole per formare una frase con senso compiuto, poi riscrivila sulla riga!', name);
+  var wrap = makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var keyParts = [];
+  for (i=0; i<selected.length; i++) keyParts.push((i+1) + ') ' + selected[i]);
+  var key = document.createElement('div'); key.className = 'answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card, 'sentence');
+  area.appendChild(card);
+}
+
+/* ==================== PREGRAFISMO ====================
+   Categoria pensata specificamente per la fascia 3-5 anni: come
+   generateColor, ignora volontariamente il selettore età (su
+   richiesta esplicita) e genera sempre alla stessa complessità
+   "esploratore". Fonti di variabilita': (1) generativa pura, ogni
+   tracciato e' calcolato da una formula parametrica; (2) pool ampio
+   di 8 famiglie di tracciato diverse; (3) parametri geometrici
+   (ampiezza, frequenza, angolo, raggio, posizione) randomizzati ad
+   ogni generazione. Ad ogni foglio vengono scelti 3 tracciati
+   distinti a caso dal pool. */
+
+function pregrafLine(ctx, box, rngFn, orient) {
+  var margin = box.w * 0.09;
+  if (orient === 'h') {
+    var y = box.y + box.h * (0.35 + rngFn() * 0.3);
+    return { pts: [ {x: box.x + margin, y: y}, {x: box.x + box.w - margin, y: y} ] };
+  } else if (orient === 'v') {
+    var x = box.x + box.w * (0.35 + rngFn() * 0.3);
+    return { pts: [ {x: x, y: box.y + margin}, {x: x, y: box.y + box.h - margin} ] };
+  } else {
+    var goingDown = rngFn() < 0.5;
+    var x1 = box.x + margin, x2 = box.x + box.w - margin;
+    var y1 = goingDown ? box.y + margin : box.y + box.h - margin;
+    var y2 = goingDown ? box.y + box.h - margin : box.y + margin;
+    return { pts: [ {x: x1, y: y1}, {x: x2, y: y2} ] };
+  }
+}
+
+function pregrafWave(ctx, box, rngFn) {
+  var margin = box.w * 0.09;
+  var x1 = box.x + margin, x2 = box.x + box.w - margin;
+  var midY = box.y + box.h / 2;
+  var amp = box.h * 0.2 + rngFn() * box.h * 0.12;
+  var cycles = 1 + Math.floor(rngFn() * 2.2);
+  var steps = 60, pts = [], i, t, x, y;
+  for (i = 0; i <= steps; i++) {
+    t = i / steps;
+    x = x1 + (x2 - x1) * t;
+    y = midY + Math.sin(t * Math.PI * 2 * cycles) * amp;
+    pts.push({x: x, y: y});
+  }
+  return { pts: pts };
+}
+
+function pregrafZigzag(ctx, box, rngFn) {
+  var margin = box.w * 0.09;
+  var x1 = box.x + margin, x2 = box.x + box.w - margin;
+  var midY = box.y + box.h / 2;
+  var amp = box.h * 0.2 + rngFn() * box.h * 0.1;
+  var peaks = 3 + Math.floor(rngFn() * 3);
+  var pts = [], i, x, y;
+  for (i = 0; i <= peaks; i++) {
+    x = x1 + (x2 - x1) * (i / peaks);
+    y = midY + (i % 2 === 0 ? -amp : amp);
+    pts.push({x: x, y: y});
+  }
+  return { pts: pts };
+}
+
+function pregrafCircle(ctx, box, rngFn) {
+  var minSide = Math.min(box.w, box.h);
+  var r = minSide * 0.26 + rngFn() * minSide * 0.08;
+  var cx = box.x + box.w / 2, cy = box.y + box.h / 2;
+  var steps = 60, pts = [], i, ang;
+  for (i = 0; i <= steps; i++) {
+    ang = -Math.PI / 2 + (i / steps) * Math.PI * 2;
+    pts.push({x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r});
+  }
+  return { pts: pts, closed: true };
+}
+
+function pregrafSpiral(ctx, box, rngFn) {
+  var minSide = Math.min(box.w, box.h);
+  var cx = box.x + box.w / 2, cy = box.y + box.h / 2;
+  var maxR = minSide * 0.36;
+  var turns = 1.4 + rngFn() * 0.7;
+  var steps = 80, pts = [], i, t, ang, r;
+  for (i = 0; i <= steps; i++) {
+    t = i / steps;
+    ang = t * turns * Math.PI * 2;
+    r = t * maxR;
+    pts.push({x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r});
+  }
+  return { pts: pts };
+}
+
+function pregrafArc(ctx, box, rngFn) {
+  var minSide = Math.min(box.w, box.h);
+  var r = minSide * 0.3 + rngFn() * minSide * 0.08;
+  var cx = box.x + box.w / 2, cy = box.y + box.h / 2 + r * 0.25;
+  var upward = rngFn() < 0.5;
+  var startAng = upward ? Math.PI : 0;
+  var endAng = upward ? 0 : Math.PI;
+  var steps = 50, pts = [], i, t, ang;
+  for (i = 0; i <= steps; i++) {
+    t = i / steps;
+    ang = startAng + (endAng - startAng) * t;
+    pts.push({x: cx + Math.cos(ang) * r, y: cy - Math.sin(ang) * r});
+  }
+  return { pts: pts };
+}
+
+var PREGRAF_TYPES = [
+  function(ctx, box, rngFn) { return pregrafLine(ctx, box, rngFn, 'h'); },
+  function(ctx, box, rngFn) { return pregrafLine(ctx, box, rngFn, 'v'); },
+  function(ctx, box, rngFn) { return pregrafLine(ctx, box, rngFn, 'd'); },
+  pregrafWave,
+  pregrafZigzag,
+  pregrafCircle,
+  pregrafSpiral,
+  pregrafArc
+];
+
+function pregrafDrawDashed(ctx, pts, closed) {
+  ctx.save();
+  ctx.strokeStyle = '#b5a781';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.setLineDash([11, 9]);
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  var i;
+  for (i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  if (closed) ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function pregrafDrawMarker(ctx, pt, color, letter) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(pt.x, pt.y, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 11px Nunito, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(letter, pt.x, pt.y + 1);
+  ctx.restore();
+}
+
+function generatePregrafismo(area, diff, name) {
+  var pad = 24, traceH = 160, gap = 22, w = 700;
+  var h = pad * 2 + traceH * 3 + gap * 2;
+
+  var pool = PREGRAF_TYPES.slice().sort(function(){ return rng() - 0.5; });
+  var chosen = pool.slice(0, 3);
+
+  var cvs = document.createElement('canvas');
+  cvs.width = w; cvs.height = h;
+  var ctx = cvs.getContext('2d');
+  ctx.fillStyle = '#fffdf7';
+  ctx.fillRect(0, 0, w, h);
+
+  var i, box, result;
+  for (i = 0; i < chosen.length; i++) {
+    box = { x: pad, y: pad + i * (traceH + gap), w: w - pad * 2, h: traceH };
+    ctx.fillStyle = '#8a7a60';
+    ctx.font = 'bold 14px Nunito, sans-serif';
+    ctx.fillText((i + 1) + '.', box.x, box.y + 16);
+
+    result = chosen[i](ctx, box, rng);
+    pregrafDrawDashed(ctx, result.pts, !!result.closed);
+    pregrafDrawMarker(ctx, result.pts[0], '#4caf7d', 'P');
+    if (!result.closed) {
+      pregrafDrawMarker(ctx, result.pts[result.pts.length - 1], '#e05f5f', 'A');
+    }
+  }
+
+  var card = makeCard('Pregrafismo', 'Ripassa con la matita la linea tratteggiata: parti da P e arriva ad A!', name);
+  var wrap = makePrintWrap();
+  wrap.inner.appendChild(cvs);
+  card.appendChild(wrap.outer);
+
+  addGuideBtn(card, 'pregraf');
+  area.appendChild(card);
+}
+
+/* ==================== DISEGNA CON I NUMERI (nonogram/picross) ====================
+   Prima scheda della categoria "logica visiva" (ultimo punto della roadmap
+   §12). Fonti di variabilita': (1) pool di 10 disegni disegnati a mano;
+   (2) ogni disegno viene ruotato/specchiato a caso (8 orientamenti,
+   gruppo diedrale); (3) per le fasce curious/challenge il disegno viene
+   inserito con un offset casuale dentro una griglia piu' ampia (bordo
+   vuoto variabile). Analogamente al Sudoku (v13), un nonogram scelto a
+   caso NON garantisce che i suoi indizi numerici abbiano una soluzione
+   deducibile con la sola logica (potrebbe servire "indovinare", il che
+   lo rende inadatto a una scheda di carta per bambini) — quindi ogni
+   combinazione generata viene verificata con un vero motore di
+   risoluzione (line-solving per righe/colonne, iterato fino a
+   convergenza) prima di essere accettata; altrimenti si scarta e si
+   riprova. */
+
+var PICROSS_SMALL = [
+  [ [0,0,1,0,0], [0,0,1,0,0], [1,1,1,1,1], [0,0,1,0,0], [0,0,1,0,0] ], /* croce */
+  [ [0,1,0,1,0], [1,1,1,1,1], [1,1,1,1,1], [0,1,1,1,0], [0,0,1,0,0] ], /* cuore */
+  [ [0,0,1,0,0], [0,1,1,1,0], [1,1,1,1,1], [0,1,1,1,0], [0,0,1,0,0] ], /* rombo */
+  [ [0,0,1,0,0], [0,1,1,1,0], [1,1,1,1,1], [1,0,1,0,1], [1,1,1,1,1] ], /* casa */
+  [ [0,0,1,0,0], [0,0,1,0,0], [0,1,1,1,0], [1,1,1,1,1], [0,1,1,1,0] ], /* barca */
+  [ [0,1,0,1,0], [1,1,1,1,1], [0,1,1,1,0], [0,0,1,0,0], [0,0,1,0,0] ]  /* fiore */
+];
+
+var PICROSS_LARGE = [
+  [ [1,0,0,0,0,0,0,0,0,1], [1,1,0,0,0,0,0,0,1,1], [0,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,0], [0,1,1,0,1,1,0,1,1,0], [0,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,0,0,1,1,1,0], [0,1,1,1,1,1,1,1,1,0], [0,0,1,1,1,1,1,1,0,0],
+    [0,0,0,1,1,1,1,0,0,0] ], /* gatto */
+  [ [0,0,0,0,1,1,0,0,0,0], [0,0,0,1,1,1,1,0,0,0], [0,0,1,1,1,1,1,1,0,0],
+    [0,1,1,1,1,1,1,1,1,0], [1,1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1,1],
+    [0,1,1,1,1,1,1,1,1,0], [0,0,1,1,1,1,1,1,0,0], [0,0,0,1,1,1,1,0,0,0],
+    [0,0,0,0,1,1,0,0,0,0] ], /* rombo grande */
+  [ [0,0,0,0,1,1,0,0,0,0], [0,0,0,1,1,1,1,0,0,0], [0,0,1,1,1,1,1,1,0,0],
+    [0,1,1,1,1,1,1,1,1,0], [0,0,1,1,1,1,1,1,0,0], [1,1,1,1,1,1,1,1,1,1],
+    [0,0,0,0,1,1,0,0,0,0], [0,0,0,0,1,1,0,0,0,0], [0,0,0,0,1,1,0,0,0,0],
+    [0,0,0,1,1,1,1,0,0,0] ], /* albero */
+  [ [0,0,0,1,1,1,1,0,0,0], [0,0,1,1,1,1,1,1,0,0], [0,1,1,1,1,1,1,1,1,0],
+    [1,1,1,1,1,1,1,1,1,1], [0,0,0,0,1,0,0,0,0,0], [0,0,0,0,1,0,0,0,0,0],
+    [0,0,0,0,1,0,0,0,0,0], [0,0,0,0,1,0,0,0,0,0], [0,0,0,0,1,1,0,0,0,0],
+    [0,0,0,0,0,1,1,0,0,0] ]  /* ombrello */
+];
+
+function picrossRotate90(m) {
+  var n = m.length, out = [], i, j, row;
+  for (i = 0; i < n; i++) {
+    row = [];
+    for (j = 0; j < n; j++) row.push(m[n - 1 - j][i]);
+    out.push(row);
+  }
+  return out;
+}
+function picrossFlipH(m) {
+  var out = [], i;
+  for (i = 0; i < m.length; i++) out.push(m[i].slice().reverse());
+  return out;
+}
+function picrossAllTransforms(base) {
+  var t0 = base, t90 = picrossRotate90(t0), t180 = picrossRotate90(t90), t270 = picrossRotate90(t180);
+  return [ t0, t90, t180, t270, picrossFlipH(t0), picrossFlipH(t90), picrossFlipH(t180), picrossFlipH(t270) ];
+}
+function picrossPad(tpl, canvasSize, offR, offC) {
+  var grid = [], r, c;
+  for (r = 0; r < canvasSize; r++) {
+    var row = [];
+    for (c = 0; c < canvasSize; c++) row.push(0);
+    grid.push(row);
+  }
+  var tn = tpl.length;
+  for (r = 0; r < tn; r++) {
+    for (c = 0; c < tn; c++) {
+      grid[offR + r][offC + c] = tpl[r][c];
+    }
+  }
+  return grid;
+}
+function picrossComputeClues(grid) {
+  var rows = grid.length, cols = grid[0].length, r, c, count;
+  var rowClues = [], colClues = [];
+  for (r = 0; r < rows; r++) {
+    var runs = []; count = 0;
+    for (c = 0; c < cols; c++) {
+      if (grid[r][c] === 1) count++;
+      else { if (count > 0) { runs.push(count); count = 0; } }
+    }
+    if (count > 0) runs.push(count);
+    rowClues.push(runs);
+  }
+  for (c = 0; c < cols; c++) {
+    var runs2 = []; count = 0;
+    for (r = 0; r < rows; r++) {
+      if (grid[r][c] === 1) count++;
+      else { if (count > 0) { runs2.push(count); count = 0; } }
+    }
+    if (count > 0) runs2.push(count);
+    colClues.push(runs2);
+  }
+  return { rowClues: rowClues, colClues: colClues };
+}
+
+/* Motore di risoluzione logica (line-solving): per una singola riga o
+   colonna, enumera tutte le disposizioni di blocchi compatibili con le
+   celle gia' note e restituisce solo le celle che risultano identiche
+   in TUTTE le disposizioni valide (le uniche deducibili con certezza). */
+function picrossEnumerate(clue, length, known, onEach) {
+  var n = clue.length;
+  var cells = new Array(length);
+  function fillRestAndEmit(pos) {
+    var k;
+    for (k = pos; k < length; k++) {
+      if (known[k] === 1) return;
+      cells[k] = 0;
+    }
+    onEach(cells.slice());
+  }
+  function backtrack(idx, pos) {
+    if (idx === n) { fillRestAndEmit(pos); return; }
+    var blockLen = clue[idx];
+    var remaining = 0, rr;
+    for (rr = idx + 1; rr < n; rr++) remaining += clue[rr] + 1;
+    var maxStart = length - remaining - blockLen;
+    var start, g, b, ok, gapIdx;
+    for (start = pos; start <= maxStart; start++) {
+      ok = true;
+      for (g = pos; g < start; g++) { if (known[g] === 1) { ok = false; break; } }
+      if (!ok) continue;
+      for (b = start; b < start + blockLen; b++) { if (known[b] === 0) { ok = false; break; } }
+      if (!ok) continue;
+      gapIdx = start + blockLen;
+      if (gapIdx < length && known[gapIdx] === 1) continue;
+      for (g = pos; g < start; g++) cells[g] = 0;
+      for (b = start; b < start + blockLen; b++) cells[b] = 1;
+      if (gapIdx < length) cells[gapIdx] = 0;
+      backtrack(idx + 1, gapIdx + 1);
+    }
+  }
+  if (n === 0) {
+    var e, validEmpty = true;
+    for (e = 0; e < length; e++) { if (known[e] === 1) { validEmpty = false; break; } }
+    if (validEmpty) {
+      var emptyCells = new Array(length);
+      for (e = 0; e < length; e++) emptyCells[e] = 0;
+      onEach(emptyCells);
+    }
+    return;
+  }
+  backtrack(0, 0);
+}
+function picrossSolveLine(clue, length, known) {
+  var possibleFill = new Array(length), possibleEmpty = new Array(length), total = 0, i;
+  for (i = 0; i < length; i++) { possibleFill[i] = 0; possibleEmpty[i] = 0; }
+  picrossEnumerate(clue, length, known, function(cells) {
+    total++;
+    for (var j = 0; j < length; j++) { if (cells[j] === 1) possibleFill[j]++; else possibleEmpty[j]++; }
+  });
+  var result = known.slice();
+  if (total === 0) return result;
+  for (i = 0; i < length; i++) {
+    if (result[i] === -1) {
+      if (possibleFill[i] === total) result[i] = 1;
+      else if (possibleEmpty[i] === total) result[i] = 0;
+    }
+  }
+  return result;
+}
+/* Propaga riga-per-riga e colonna-per-colonna fino a convergenza.
+   Restituisce true SOLO se ogni cella risulta univocamente deducibile
+   (nessuna cella resta "sconosciuta") — cioe' la scheda si puo'
+   risolvere con la sola logica, senza indovinare. */
+function picrossFullySolvable(rowClues, colClues, rows, cols) {
+  var grid = [], r, c;
+  for (r = 0; r < rows; r++) { var row = []; for (c = 0; c < cols; c++) row.push(-1); grid.push(row); }
+  var changed = true, iterations = 0, maxIter = (rows + cols) * 3 + 10;
+  while (changed && iterations < maxIter) {
+    changed = false; iterations++;
+    for (r = 0; r < rows; r++) {
+      var newRow = picrossSolveLine(rowClues[r], cols, grid[r]);
+      for (c = 0; c < cols; c++) { if (newRow[c] !== grid[r][c]) { grid[r][c] = newRow[c]; changed = true; } }
+    }
+    for (c = 0; c < cols; c++) {
+      var colKnown = []; for (r = 0; r < rows; r++) colKnown.push(grid[r][c]);
+      var newCol = picrossSolveLine(colClues[c], rows, colKnown);
+      for (r = 0; r < rows; r++) { if (newCol[r] !== colKnown[r]) { grid[r][c] = newCol[r]; changed = true; } }
+    }
+  }
+  for (r = 0; r < rows; r++) for (c = 0; c < cols; c++) if (grid[r][c] === -1) return false;
+  return true;
+}
+
+function generatePicross(area, diff, name) {
+  var cfg = {
+    explorer:  { canvas: 5,  pad: 0, pool: PICROSS_SMALL },
+    curious:   { canvas: 8,  pad: 3, pool: PICROSS_SMALL },
+    growing:   { canvas: 10, pad: 0, pool: PICROSS_LARGE },
+    challenge: { canvas: 13, pad: 3, pool: PICROSS_LARGE }
+  };
+  var c = cfg[diff] || cfg.curious;
+  var size = c.canvas, pad = c.pad, pool = c.pool;
+
+  var finalGrid = null, rowClues = null, colClues = null;
+  var attempts = 0, maxAttempts = 60;
+  while (attempts < maxAttempts && !finalGrid) {
+    attempts++;
+    var baseTpl = pool[Math.floor(rng() * pool.length)];
+    var transforms = picrossAllTransforms(baseTpl);
+    var tform = transforms[Math.floor(rng() * transforms.length)];
+    var offR = pad > 0 ? Math.floor(rng() * (pad + 1)) : 0;
+    var offC = pad > 0 ? Math.floor(rng() * (pad + 1)) : 0;
+    var grid = picrossPad(tform, size, offR, offC);
+    var clues = picrossComputeClues(grid);
+    if (picrossFullySolvable(clues.rowClues, clues.colClues, size, size)) {
+      finalGrid = grid; rowClues = clues.rowClues; colClues = clues.colClues;
+    }
+  }
+  if (!finalGrid) {
+    /* Fallback di sicurezza (non dovrebbe mai servire in pratica):
+       primo template, nessuna trasformazione, nessun offset. */
+    finalGrid = picrossPad(pool[0], size, 0, 0);
+    var fc = picrossComputeClues(finalGrid);
+    rowClues = fc.rowClues; colClues = fc.colClues;
+  }
+
+  var cellSizeCfg = { explorer: 38, curious: 30, growing: 30, challenge: 24 };
+  var cellPx = cellSizeCfg[diff] || 30;
+
+  var table = document.createElement('table'); table.className = 'picross-table';
+  var thead = document.createElement('tr');
+  var corner = document.createElement('th'); corner.className = 'picross-corner';
+  thead.appendChild(corner);
+  var c2, k;
+  for (c2 = 0; c2 < size; c2++) {
+    var th = document.createElement('th'); th.className = 'picross-colclue'; th.style.width = cellPx + 'px';
+    var stack = document.createElement('div'); stack.className = 'picross-clue-stack';
+    var clueArr = colClues[c2].length ? colClues[c2] : [0];
+    for (k = 0; k < clueArr.length; k++) {
+      var num = document.createElement('div'); num.textContent = clueArr[k];
+      stack.appendChild(num);
+    }
+    th.appendChild(stack);
+    thead.appendChild(th);
+  }
+  table.appendChild(thead);
+
+  var r2;
+  for (r2 = 0; r2 < size; r2++) {
+    var tr = document.createElement('tr');
+    var rowTh = document.createElement('th'); rowTh.className = 'picross-rowclue';
+    var rowStack = document.createElement('div'); rowStack.className = 'picross-clue-row';
+    var rArr = rowClues[r2].length ? rowClues[r2] : [0];
+    rowStack.textContent = rArr.join(' ');
+    rowTh.appendChild(rowStack);
+    tr.appendChild(rowTh);
+    for (c2 = 0; c2 < size; c2++) {
+      var td = document.createElement('td'); td.className = 'picross-cell';
+      td.style.width = cellPx + 'px'; td.style.height = cellPx + 'px';
+      tr.appendChild(td);
+    }
+    table.appendChild(tr);
+  }
+
+  var card = makeCard('Disegna con i numeri', 'Segui i numeri di ogni riga e colonna: colora le celle giuste e scoprirai un disegno a sorpresa!', name);
+  var wrap = makePrintWrap();
+  wrap.inner.appendChild(table);
+  card.appendChild(wrap.outer);
+
+  /* Anteprima soluzione in miniatura — solo per il genitore, solo a
+     schermo (la classe .answer-key e' nascosta in stampa). */
+  var mini = document.createElement('canvas');
+  var scale = 5;
+  mini.width = size * scale; mini.height = size * scale;
+  var mctx = mini.getContext('2d');
+  mctx.fillStyle = '#fffdf7'; mctx.fillRect(0, 0, mini.width, mini.height);
+  var mr, mc;
+  for (mr = 0; mr < size; mr++) {
+    for (mc = 0; mc < size; mc++) {
+      if (finalGrid[mr][mc] === 1) { mctx.fillStyle = '#2d2416'; mctx.fillRect(mc * scale, mr * scale, scale, scale); }
+    }
+  }
+  var key = document.createElement('div'); key.className = 'answer-key';
+  key.style.cssText = 'display:flex;align-items:center;gap:8px;';
+  var keyLabel = document.createElement('span'); keyLabel.textContent = 'Anteprima soluzione (solo per te, non compare in stampa):';
+  key.appendChild(keyLabel);
+  key.appendChild(mini);
+  card.appendChild(key);
+
+  addGuideBtn(card, 'picross');
   area.appendChild(card);
 }
