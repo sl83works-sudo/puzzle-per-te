@@ -148,6 +148,14 @@ canvas { display: block; border-radius: 8px; border: 1.5px solid var(--c-border)
 .sentence-tile { padding: 5px 12px; border: 2px solid var(--c-border); border-radius: 8px; background: #fafafa; font-family: 'Fredoka One', cursive; font-size: 0.9rem; color: var(--c-text); }
 .sentence-blank { border-bottom: 2px solid var(--c-text); height: 1.7em; width: 100%; }
 
+/* FRASI DA COMPLETARE IT-EN */
+.frasi-list { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 640px; }
+.frasi-en-item { display: flex; flex-direction: column; gap: 6px; }
+.frasi-it-line { font-size: 0.8rem; color: var(--c-muted); font-style: italic; }
+.frasi-en-line { font-size: 1rem; font-weight: 700; color: var(--c-text); }
+.frasi-inline-blank { display: inline-block; width: 70px; border-bottom: 2px solid var(--c-text); height: 1em; vertical-align: middle; margin: 0 4px; }
+.frasi-bank { display: flex; gap: 8px; flex-wrap: wrap; }
+
 /* SINONIMI E CONTRARI */
 .synant-columns { display: flex; justify-content: space-between; gap: 60px; width: 100%; max-width: 520px; margin: 0 auto; }
 .synant-col { display: flex; flex-direction: column; gap: 16px; flex: 1; }
