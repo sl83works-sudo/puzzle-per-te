@@ -45,6 +45,10 @@ function generate() {
   else if (currentType === 'picross') generatePicross(area, diff, name);
   else if (currentType === 'synant') generateSinonimiContrari(area, diff, name);
   else if (currentType === 'sentence') generateOrdinaFrase(area, diff, name);
+  else if (currentType === 'vocaben') generateVocabolarioEN(area, diff, name);
+  else if (currentType === 'anagramen') generateAnagrammiEN(area, diff, name);
+  else if (currentType === 'missingletteren') generateLetteraMancanteEN(area, diff, name);
+  else if (currentType === 'frasien') generateFrasiITEN(area, diff, name);
 }
 
 function makeCard(title, subtitle, name) {
@@ -80,7 +84,11 @@ var parentGuides = {
   pregraf: 'Questa scheda allena la motricità fine e la coordinazione occhio-mano, le abilità di base che preparano alla scrittura vera e propria: il bambino ripassa con la matita linee, onde, cerchi e spirali tratteggiate. È pensata specificamente per la fascia 3-5 anni, quindi ignora volutamente la selezione dell\'età. Lasciate che tenga la matita con la presa più naturale per lui in questa fase, senza correggerlo troppo presto: conta il movimento fluido del polso, non la precisione millimetrica. Uscire dalla linea tratteggiata è normalissimo a questa età, non è un errore da segnalare.',
   picross: 'Questa scheda introduce la logica a griglia: i numeri accanto a ogni riga e colonna indicano quante celle consecutive vanno colorate, e in quanti gruppi. Se una riga ha scritto "3 2" significa un blocco di 3 celle colorate, poi almeno una casella vuota, poi un blocco di 2. Colorando le celle giuste emerge un disegno a sorpresa! È logica deduttiva più impegnativa del solito: aiutate il bambino a partire dalle righe o colonne con i numeri più alti (spesso si deducono quasi subito) e a procedere per esclusione. Ogni scheda è verificata al computer prima di essere generata, per garantire che si risolva sempre con la sola logica, senza bisogno di indovinare.',
   synant: 'Questa scheda allena il vocabolario collegando ogni parola al suo sinonimo (stesso significato) o contrario (significato opposto) — la scheda sceglie a caso quale delle due relazioni proporre, quindi controllate il sottotitolo prima di iniziare. Il bambino deve tracciare una linea tra la parola a sinistra e la risposta corretta a destra, che sono mescolate apposta. Se una parola non è familiare, è un\'ottima occasione per parlarne insieme: chiedete al bambino di provare a indovinare dal contesto o dal suono della parola prima di darvi la risposta.',
-  sentence: 'Questa scheda allena la sintassi: il bambino deve riordinare parole mescolate per formare una frase di senso compiuto, poi riscriverla sulla riga. Suggerite di leggere le parole ad alta voce in ordini diversi finché "non suona giusto" — l\'orecchio spesso riconosce l\'ordine corretto prima della logica esplicita. La lettera maiuscola indica sempre quale parola apre la frase, e il punto finale indica quale la chiude: sono indizi validi, non un imbroglio, fatene usare consapevolmente il bambino.'
+  sentence: 'Questa scheda allena la sintassi: il bambino deve riordinare parole mescolate per formare una frase di senso compiuto, poi riscriverla sulla riga. Suggerite di leggere le parole ad alta voce in ordini diversi finché "non suona giusto" — l\'orecchio spesso riconosce l\'ordine corretto prima della logica esplicita. La lettera maiuscola indica sempre quale parola apre la frase, e il punto finale indica quale la chiude: sono indizi validi, non un imbroglio, fatene usare consapevolmente il bambino.',
+  vocaben: 'Prima scheda di inglese dell\'app: il bambino collega ogni parola italiana (con la sua emoji) alla traduzione inglese corretta. Leggete le parole inglesi ad alta voce insieme a lui: la pronuncia inglese spesso non corrisponde a come la parola è scritta, quindi sentirla è importante quanto vederla scritta. Per le fasce più grandi alcune emoji rappresentano concetti astratti (es. 🕊️ per "libertà") in modo simbolico, non letterale — è un\'occasione per parlare del significato della parola insieme, non solo per tradurla meccanicamente.',
+  anagramen: 'Come Anagrammi in italiano, ma con parole inglesi: il bambino riordina le lettere mescolate per ricostruire la parola. La traduzione italiana è sempre mostrata come aiuto, perché senza sapere quale parola si sta cercando indovinare l\'ordine delle lettere in una lingua straniera è quasi impossibile. Fate provare il bambino a pronunciare la parola inglese una volta ricostruita: la scrittura e la pronuncia inglese spesso non coincidono, ed è un\'occasione in più per allenare l\'orecchio.',
+  missingletteren: 'Come Lettera mancante in italiano, ma con parole inglesi: il bambino completa le lettere mancanti mantenendo l\'ordine corretto. La traduzione italiana è sempre mostrata, perché il richiamo ortografico in una lingua straniera richiede un aggancio al significato — a differenza dell\'italiano, dove il bambino può spesso affidarsi al suono della parola.',
+  frasien: 'Questa scheda allena la traduzione in contesto: il bambino legge la frase in italiano, poi sceglie dalla banca di 3 parole quella inglese giusta per completare la frase corrispondente. A differenza del semplice abbinamento parola-parola, qui la parola va capita all\'interno di una frase intera — un passo più vicino all\'uso reale della lingua. Se il bambino esita tra due opzioni plausibili, fatelo tradurre l\'intera frase italiana ad alta voce prima di scegliere: spesso il significato della frase intera scioglie il dubbio.'
 };
 
 function showGuide(type) {
@@ -1719,6 +1727,385 @@ function generateOrdinaFrase(area, diff, name) {
   card.appendChild(key);
 
   addGuideBtn(card, 'sentence');
+  area.appendChild(card);
+}
+
+/* ==================== VOCABOLARIO IT-EN ====================
+   Prima scheda della categoria "lingue straniere". Riusa il layout
+   a due colonne collegabili gia' costruito per Sinonimi e Contrari
+   (stesse classi CSS .synant-*), ma abbina parola italiana (con
+   emoji come rinforzo visivo, "vocabolario illustrato") a
+   traduzione inglese, invece di sinonimo/contrario — su richiesta
+   esplicita di Salvo di unire le due idee discusse. Le emoji
+   sostituiscono immagini caricate, evitando dipendenze da asset
+   esterni. Fonti di variabilita': pool di ~60 coppie IT-EN-emoji
+   (14-16 per fascia) + selezione casuale sottoinsieme/ordine +
+   mescolamento colonna destra senza punti fermi (stesso schema di
+   generateSinonimiContrari). */
+var EN_VOCAB = {
+  explorer: [
+    {it:'CANE', en:'DOG', emoji:'🐶'}, {it:'GATTO', en:'CAT', emoji:'🐱'},
+    {it:'SOLE', en:'SUN', emoji:'☀️'}, {it:'LUNA', en:'MOON', emoji:'🌙'},
+    {it:'MELA', en:'APPLE', emoji:'🍎'}, {it:'CASA', en:'HOUSE', emoji:'🏠'},
+    {it:'LIBRO', en:'BOOK', emoji:'📚'}, {it:'PALLA', en:'BALL', emoji:'⚽'},
+    {it:'PESCE', en:'FISH', emoji:'🐟'}, {it:'UCCELLO', en:'BIRD', emoji:'🐦'},
+    {it:'FIORE', en:'FLOWER', emoji:'🌸'}, {it:'STELLA', en:'STAR', emoji:'⭐'},
+    {it:'ALBERO', en:'TREE', emoji:'🌳'}, {it:'LATTE', en:'MILK', emoji:'🥛'},
+    {it:'TRENO', en:'TRAIN', emoji:'🚂'}, {it:'OMBRELLO', en:'UMBRELLA', emoji:'☂️'}
+  ],
+  curious: [
+    {it:'FARFALLA', en:'BUTTERFLY', emoji:'🦋'}, {it:'ELEFANTE', en:'ELEPHANT', emoji:'🐘'},
+    {it:'ZAINO', en:'BACKPACK', emoji:'🎒'}, {it:'MATITA', en:'PENCIL', emoji:'✏️'},
+    {it:'OROLOGIO', en:'CLOCK', emoji:'🕐'}, {it:'SCARPA', en:'SHOE', emoji:'👟'},
+    {it:'CAPPELLO', en:'HAT', emoji:'🎩'}, {it:'PIOGGIA', en:'RAIN', emoji:'🌧️'},
+    {it:'NEVE', en:'SNOW', emoji:'❄️'}, {it:'GELATO', en:'ICE CREAM', emoji:'🍦'},
+    {it:'TORTA', en:'CAKE', emoji:'🎂'}, {it:'CHITARRA', en:'GUITAR', emoji:'🎸'},
+    {it:'BICICLETTA', en:'BICYCLE', emoji:'🚲'}, {it:'AEREO', en:'AIRPLANE', emoji:'✈️'},
+    {it:'MONTAGNA', en:'MOUNTAIN', emoji:'⛰️'}, {it:'ISOLA', en:'ISLAND', emoji:'🏝️'}
+  ],
+  growing: [
+    {it:'VULCANO', en:'VOLCANO', emoji:'🌋'}, {it:'FORESTA', en:'FOREST', emoji:'🌲'},
+    {it:'DESERTO', en:'DESERT', emoji:'🏜️'}, {it:'TEMPESTA', en:'STORM', emoji:'⛈️'},
+    {it:'RAZZO', en:'ROCKET', emoji:'🚀'}, {it:'PIANETA', en:'PLANET', emoji:'🪐'},
+    {it:'UNIVERSO', en:'UNIVERSE', emoji:'🌌'}, {it:'MICROSCOPIO', en:'MICROSCOPE', emoji:'🔬'},
+    {it:'POMPIERE', en:'FIREFIGHTER', emoji:'🚒'}, {it:'MEDICO', en:'DOCTOR', emoji:'🩺'},
+    {it:'CASTELLO', en:'CASTLE', emoji:'🏰'}, {it:'TESORO', en:'TREASURE', emoji:'💰'},
+    {it:'BUSSOLA', en:'COMPASS', emoji:'🧭'}, {it:'FULMINE', en:'LIGHTNING', emoji:'⚡'},
+    {it:'ARCOBALENO', en:'RAINBOW', emoji:'🌈'}, {it:'GHIACCIAIO', en:'GLACIER', emoji:'🧊'}
+  ],
+  challenge: [
+    {it:'CORAGGIOSO', en:'BRAVE', emoji:'🦸'}, {it:'VELOCE', en:'FAST', emoji:'⚡'},
+    {it:'SILENZIOSO', en:'QUIET', emoji:'🤫'}, {it:'GENEROSO', en:'GENEROUS', emoji:'🎁'},
+    {it:'AVVENTURA', en:'ADVENTURE', emoji:'🗺️'}, {it:'MISTERO', en:'MYSTERY', emoji:'🔍'},
+    {it:'LIBERTÀ', en:'FREEDOM', emoji:'🕊️'}, {it:'AMICIZIA', en:'FRIENDSHIP', emoji:'🤝'},
+    {it:'CURIOSITÀ', en:'CURIOSITY', emoji:'🧐'}, {it:'IMMAGINAZIONE', en:'IMAGINATION', emoji:'💭'},
+    {it:'CONOSCENZA', en:'KNOWLEDGE', emoji:'📖'}, {it:'DETERMINAZIONE', en:'DETERMINATION', emoji:'💪'},
+    {it:'PAZIENZA', en:'PATIENCE', emoji:'⏳'}, {it:'GRATITUDINE', en:'GRATITUDE', emoji:'🙏'}
+  ]
+};
+
+function generateVocabolarioEN(area, diff, name) {
+  var pool = (EN_VOCAB[diff] || EN_VOCAB.curious).slice().sort(function(){ return rng()-0.5; });
+  var countCfg = { explorer:6, curious:7, growing:8, challenge:9 };
+  var count = Math.min(countCfg[diff] || 7, pool.length);
+  var selected = pool.slice(0, count);
+
+  var items = [], i;
+  for (i=0; i<selected.length; i++) {
+    items.push({ letter: String.fromCharCode(65+i), it: selected[i].it, en: selected[i].en, emoji: selected[i].emoji });
+  }
+
+  var rightOrder, tries = 0, hasFixedPoint;
+  do {
+    rightOrder = items.slice().sort(function(){ return rng()-0.5; });
+    hasFixedPoint = false;
+    for (i=0; i<rightOrder.length; i++) { if (rightOrder[i] === items[i]) { hasFixedPoint = true; break; } }
+    tries++;
+  } while (hasFixedPoint && tries < 30);
+
+  var wrapDiv = document.createElement('div'); wrapDiv.className = 'synant-columns';
+
+  var colLeft = document.createElement('div'); colLeft.className = 'synant-col left';
+  for (i=0; i<items.length; i++) {
+    var rowL = document.createElement('div'); rowL.className = 'synant-item';
+    var tagL = document.createElement('span'); tagL.className = 'synant-tag'; tagL.textContent = items[i].letter + '.';
+    var emojiL = document.createElement('span'); emojiL.textContent = items[i].emoji;
+    var textL = document.createElement('span'); textL.textContent = items[i].it;
+    var dotL = document.createElement('div'); dotL.className = 'synant-dot';
+    rowL.appendChild(tagL); rowL.appendChild(emojiL); rowL.appendChild(textL); rowL.appendChild(dotL);
+    colLeft.appendChild(rowL);
+  }
+
+  var colRight = document.createElement('div'); colRight.className = 'synant-col right';
+  for (i=0; i<rightOrder.length; i++) {
+    var rowR = document.createElement('div'); rowR.className = 'synant-item';
+    var dotR = document.createElement('div'); dotR.className = 'synant-dot';
+    var textR = document.createElement('span'); textR.textContent = rightOrder[i].en;
+    rowR.appendChild(dotR); rowR.appendChild(textR);
+    colRight.appendChild(rowR);
+  }
+
+  wrapDiv.appendChild(colLeft); wrapDiv.appendChild(colRight);
+
+  var card = makeCard('Vocabolario IT-EN', 'Collega ogni parola italiana alla sua traduzione in inglese!', name);
+  var wrap = makePrintWrap(); wrap.inner.appendChild(wrapDiv); card.appendChild(wrap.outer);
+
+  var keyParts = [];
+  for (i=0; i<items.length; i++) keyParts.push(items[i].letter + ') ' + items[i].it + ' → ' + items[i].en);
+  var key = document.createElement('div'); key.className = 'answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card, 'vocaben');
+  area.appendChild(card);
+}
+
+/* ==================== ANAGRAMMI IN INGLESE ====================
+   Riusa il motore di generateAnagrammi (stessa scrambleWord, stesso
+   markup .anagram-*) ma su un pool di parole inglesi con traduzione
+   italiana abbinata. L'hint (traduzione) e' SEMPRE mostrato, a
+   differenza della versione italiana dove compare solo per le fasce
+   piu' piccole — senza sapere quale parola cercare, ricostruire
+   l'ordine delle lettere in una lingua straniera e' arbitrario. */
+var EN_WORD_VOCAB = {
+  explorer: [
+    {en:'CAT',it:'gatto'}, {en:'DOG',it:'cane'}, {en:'SUN',it:'sole'}, {en:'HAT',it:'cappello'},
+    {en:'CUP',it:'tazza'}, {en:'BOX',it:'scatola'}, {en:'PEN',it:'penna'}, {en:'BED',it:'letto'},
+    {en:'EGG',it:'uovo'}, {en:'BUS',it:'autobus'}, {en:'STAR',it:'stella'}, {en:'FISH',it:'pesce'}
+  ],
+  curious: [
+    {en:'APPLE',it:'mela'}, {en:'HOUSE',it:'casa'}, {en:'WATER',it:'acqua'}, {en:'HAPPY',it:'felice'},
+    {en:'TABLE',it:'tavolo'}, {en:'CHAIR',it:'sedia'}, {en:'MUSIC',it:'musica'}, {en:'GREEN',it:'verde'},
+    {en:'SMILE',it:'sorriso'}, {en:'CLOUD',it:'nuvola'}, {en:'BREAD',it:'pane'}, {en:'RIVER',it:'fiume'}
+  ],
+  growing: [
+    {en:'GARDEN',it:'giardino'}, {en:'WINDOW',it:'finestra'}, {en:'FRIEND',it:'amico'}, {en:'ANIMAL',it:'animale'},
+    {en:'PICTURE',it:'immagine'}, {en:'KITCHEN',it:'cucina'}, {en:'JOURNEY',it:'viaggio'}, {en:'WEATHER',it:'tempo meteorologico'},
+    {en:'FOREST',it:'foresta'}, {en:'CASTLE',it:'castello'}, {en:'ISLAND',it:'isola'}, {en:'DOCTOR',it:'medico'}
+  ],
+  challenge: [
+    {en:'ADVENTURE',it:'avventura'}, {en:'KNOWLEDGE',it:'conoscenza'}, {en:'MOUNTAIN',it:'montagna'}, {en:'ELEPHANT',it:'elefante'},
+    {en:'CHOCOLATE',it:'cioccolato'}, {en:'BUTTERFLY',it:'farfalla'}, {en:'TELESCOPE',it:'telescopio'}, {en:'DISCOVERY',it:'scoperta'},
+    {en:'FRIENDSHIP',it:'amicizia'}, {en:'IMAGINATION',it:'immaginazione'}, {en:'STRENGTH',it:'forza'}, {en:'CHALLENGE',it:'sfida'}
+  ]
+};
+
+function generateAnagrammiEN(area, diff, name) {
+  var pool = (EN_WORD_VOCAB[diff] || EN_WORD_VOCAB.curious).slice().sort(function(){ return rng()-0.5; });
+  var countCfg = { explorer:5, curious:8, growing:10, challenge:12 };
+  var count = countCfg[diff] || 8;
+  var maxLenCfg = { explorer:5, curious:7, growing:10, challenge:13 };
+  var maxLen = maxLenCfg[diff] || 7;
+
+  var selected=[], pi;
+  for (pi=0; pi<pool.length && selected.length<count; pi++) {
+    if (pool[pi].en.length <= maxLen) selected.push(pool[pi]);
+  }
+  if (selected.length < count) selected = pool.slice(0, count);
+
+  var container=document.createElement('div'); container.className='anagram-list';
+  var i, j;
+  for (i=0; i<selected.length; i++){
+    var word = selected[i].en;
+    var scrambled = scrambleWord(word);
+    var row=document.createElement('div'); row.className='anagram-row';
+
+    var tiles=document.createElement('div'); tiles.className='anagram-tiles';
+    for (j=0;j<scrambled.length;j++){
+      var tile=document.createElement('div'); tile.className='anagram-tile'; tile.textContent=scrambled[j];
+      tiles.appendChild(tile);
+    }
+    row.appendChild(tiles);
+
+    var arrow=document.createElement('div'); arrow.className='anagram-arrow'; arrow.textContent='→';
+    row.appendChild(arrow);
+
+    var hint=document.createElement('span'); hint.className='anagram-hint'; hint.textContent='(ITA: ' + selected[i].it + ')';
+    row.appendChild(hint);
+
+    var blank=document.createElement('div'); blank.className='anagram-blank';
+    row.appendChild(blank);
+
+    container.appendChild(row);
+  }
+
+  var card=makeCard('Anagrammi in inglese','Riordina le lettere per scoprire la parola inglese nascosta!',name);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var keyParts=[];
+  for (i=0;i<selected.length;i++) keyParts.push((i+1) + ') ' + selected[i].en + ' (' + selected[i].it + ')');
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card,'anagramen');
+  area.appendChild(card);
+}
+
+/* ==================== LETTERA MANCANTE IN INGLESE ====================
+   Riusa il motore di generateLetteraMancante sullo stesso pool
+   EN_WORD_VOCAB di generateAnagrammiEN. A differenza della versione
+   italiana, mostra sempre la traduzione: il richiamo ortografico in
+   lingua straniera ha bisogno di un aggancio al significato, non solo
+   al suono della parola. */
+function generateLetteraMancanteEN(area, diff, name) {
+  var pool = (EN_WORD_VOCAB[diff] || EN_WORD_VOCAB.curious).slice().sort(function(){ return rng()-0.5; });
+  var countCfg = { explorer:5, curious:8, growing:10, challenge:12 };
+  var count = countCfg[diff] || 8;
+  var maxLenCfg = { explorer:6, curious:8, growing:11, challenge:14 };
+  var maxLen = maxLenCfg[diff] || 8;
+  var blankRangeCfg = { explorer:[1,1], curious:[1,2], growing:[2,3], challenge:[3,4] };
+  var blankRange = blankRangeCfg[diff] || [1,2];
+
+  var selected=[], pi;
+  for (pi=0; pi<pool.length && selected.length<count; pi++) {
+    if (pool[pi].en.length <= maxLen && pool[pi].en.length >= 3) selected.push(pool[pi]);
+  }
+  if (selected.length < count) selected = pool.slice(0, count);
+
+  var container=document.createElement('div'); container.className='anagram-list';
+  var i, j;
+  for (i=0;i<selected.length;i++){
+    var word = selected[i].en;
+    var wantBlanks = blankRange[0] + Math.floor(rng()*(blankRange[1]-blankRange[0]+1));
+    var maxBlanks = Math.max(1, word.length-2);
+    var numBlanks = Math.min(wantBlanks, maxBlanks);
+
+    var positions=[]; for (j=0;j<word.length;j++) positions.push(j);
+    positions.sort(function(){ return rng()-0.5; });
+    var blankPositions = positions.slice(0, numBlanks);
+    var blankSet = {};
+    for (j=0;j<blankPositions.length;j++) blankSet[blankPositions[j]]=true;
+
+    var row=document.createElement('div'); row.className='anagram-row';
+    var tiles=document.createElement('div'); tiles.className='anagram-tiles';
+    for (j=0;j<word.length;j++){
+      var tile=document.createElement('div'); tile.className='anagram-tile';
+      if (blankSet[j]) { tile.classList.add('blank'); }
+      else { tile.textContent = word[j]; }
+      tiles.appendChild(tile);
+    }
+    row.appendChild(tiles);
+
+    var hint=document.createElement('span'); hint.className='anagram-hint'; hint.textContent='(ITA: ' + selected[i].it + ')';
+    row.appendChild(hint);
+
+    container.appendChild(row);
+  }
+
+  var card=makeCard('Lettera mancante in inglese','Scopri quali lettere mancano e completa ogni parola inglese!',name);
+  var wrap=makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var keyParts=[];
+  for (i=0;i<selected.length;i++) keyParts.push((i+1) + ') ' + selected[i].en + ' (' + selected[i].it + ')');
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card,'missingletteren');
+  area.appendChild(card);
+}
+
+/* ==================== FRASI DA COMPLETARE IT-EN ====================
+   Terza scheda della categoria "lingue straniere". A differenza di
+   Vocabolario IT-EN (parola isolata), qui la parola inglese va capita
+   dentro una frase intera — un passo verso l'uso reale della lingua.
+   Ogni voce del pool ancora il significato tramite la frase italiana
+   completa, cosi' la parola corretta non e' ambigua anche se altre
+   parole del "word bank" sarebbero grammaticalmente plausibili.
+   Fonti di variabilita': pool di 48 frasi (12x4 fasce) + selezione
+   casuale sottoinsieme + banca di 3 parole (risposta + 2 distrattori
+   pescati a caso dalle altre frasi della stessa fascia) mescolata. */
+var FRASI_VOCAB = {
+  explorer: [
+    {it:'Il gatto è nero.', en:'The cat is ___.', answer:'black'},
+    {it:'Il sole è caldo.', en:'The sun is ___.', answer:'hot'},
+    {it:'Ho un cane.', en:'I have a ___.', answer:'dog'},
+    {it:'La mela è rossa.', en:'The apple is ___.', answer:'red'},
+    {it:'Il libro è grande.', en:'The book is ___.', answer:'big'},
+    {it:'Il pesce nuota.', en:'The fish can ___.', answer:'swim'},
+    {it:'La palla è blu.', en:'The ball is ___.', answer:'blue'},
+    {it:'Il latte è bianco.', en:'The milk is ___.', answer:'white'},
+    {it:'L\'uccello vola.', en:'The bird can ___.', answer:'fly'},
+    {it:'La casa è piccola.', en:'The house is ___.', answer:'small'},
+    {it:'Il treno è veloce.', en:'The train is ___.', answer:'fast'},
+    {it:'Il fiore è giallo.', en:'The flower is ___.', answer:'yellow'}
+  ],
+  curious: [
+    {it:'Il bambino gioca in giardino.', en:'The child plays in the ___.', answer:'garden'},
+    {it:'Mia sorella legge un libro.', en:'My sister reads a ___.', answer:'book'},
+    {it:'Noi mangiamo la colazione la mattina.', en:'We eat ___ in the morning.', answer:'breakfast'},
+    {it:'Il cielo diventa scuro di notte.', en:'The sky becomes ___ at night.', answer:'dark'},
+    {it:'Lei indossa un cappello rosso.', en:'She wears a red ___.', answer:'hat'},
+    {it:'Il cane abbaia forte.', en:'The dog barks ___.', answer:'loudly'},
+    {it:'Noi andiamo a scuola in autobus.', en:'We go to school by ___.', answer:'bus'},
+    {it:'Il gelato si scioglie al sole.', en:'The ice cream melts in the ___.', answer:'sun'},
+    {it:'Lui ha molti amici.', en:'He has many ___.', answer:'friends'},
+    {it:'La pioggia cade dal cielo.', en:'The rain falls from the ___.', answer:'sky'},
+    {it:'Il fiume scorre verso il mare.', en:'The river flows to the ___.', answer:'sea'},
+    {it:'I bambini ridono felici.', en:'The children laugh ___.', answer:'happily'}
+  ],
+  growing: [
+    {it:'Gli scienziati studiano il comportamento degli animali.', en:'Scientists study animal ___.', answer:'behavior'},
+    {it:'La squadra ha vinto il campionato.', en:'The team won the ___.', answer:'championship'},
+    {it:'L\'astronauta ha esplorato lo spazio.', en:'The astronaut explored ___.', answer:'space'},
+    {it:'Il vulcano è rimasto silenzioso per anni.', en:'The volcano remained ___ for years.', answer:'silent'},
+    {it:'I ricercatori hanno scoperto una nuova specie.', en:'Researchers discovered a new ___.', answer:'species'},
+    {it:'La biblioteca è aperta ogni giorno.', en:'The library is ___ every day.', answer:'open'},
+    {it:'Il fiume attraversa la valle.', en:'The river crosses the ___.', answer:'valley'},
+    {it:'Gli esploratori hanno attraversato la foresta.', en:'The explorers crossed the ___.', answer:'forest'},
+    {it:'Il meccanico ha riparato il motore.', en:'The mechanic repaired the ___.', answer:'engine'},
+    {it:'Un arcobaleno è apparso dopo il temporale.', en:'A rainbow appeared after the ___.', answer:'storm'},
+    {it:'I delfini vivono nell\'oceano.', en:'Dolphins live in the ___.', answer:'ocean'},
+    {it:'Il contadino raccoglie il grano.', en:'The farmer harvests the ___.', answer:'wheat'}
+  ],
+  challenge: [
+    {it:'Gli alpinisti hanno raggiunto la vetta prima del tramonto.', en:'The climbers reached the ___ before sunset.', answer:'summit'},
+    {it:'L\'archeologa ha scoperto un manufatto antico.', en:'The archaeologist discovered an ancient ___.', answer:'artifact'},
+    {it:'Il governo ha approvato una nuova legge.', en:'The government passed a new ___.', answer:'law'},
+    {it:'Gli ingegneri hanno progettato un ponte resistente.', en:'The engineers designed a sturdy ___.', answer:'bridge'},
+    {it:'La comunità scientifica discute questioni etiche.', en:'The scientific community discusses ethical ___.', answer:'issues'},
+    {it:'L\'atleta ha battuto il record mondiale.', en:'The athlete broke the world ___.', answer:'record'},
+    {it:'I diplomatici hanno negoziato un accordo di pace.', en:'The diplomats negotiated a peace ___.', answer:'agreement'},
+    {it:'Il chirurgo ha eseguito un intervento delicato.', en:'The surgeon performed a delicate ___.', answer:'operation'},
+    {it:'Gli storici dibattono sulle cause del declino.', en:'Historians debate the causes of the ___.', answer:'decline'},
+    {it:'Le nuove tecnologie trasformano la comunicazione.', en:'New technologies transform ___.', answer:'communication'},
+    {it:'Il romanzo racconta una storia di coraggio.', en:'The novel tells a story of ___.', answer:'courage'},
+    {it:'Gli studenti hanno presentato un progetto innovativo.', en:'The students presented an innovative ___.', answer:'project'}
+  ]
+};
+
+function generateFrasiITEN(area, diff, name) {
+  var fullPool = FRASI_VOCAB[diff] || FRASI_VOCAB.curious;
+  var shuffledPool = fullPool.slice().sort(function(){ return rng()-0.5; });
+  var countCfg = { explorer:4, curious:5, growing:5, challenge:6 };
+  var count = Math.min(countCfg[diff] || 5, shuffledPool.length);
+  var selected = shuffledPool.slice(0, count);
+
+  var container = document.createElement('div'); container.className = 'frasi-list';
+  var i, b;
+  for (i=0; i<selected.length; i++) {
+    var item = selected[i];
+    var others = fullPool.filter(function(o){ return o.answer.toLowerCase() !== item.answer.toLowerCase(); });
+    others = others.slice().sort(function(){ return rng()-0.5; });
+    var distractors = others.slice(0,2).map(function(o){ return o.answer; });
+    var bank = [item.answer].concat(distractors);
+    bank.sort(function(){ return rng()-0.5; });
+
+    var itemDiv = document.createElement('div'); itemDiv.className = 'frasi-en-item';
+
+    var itLine = document.createElement('div'); itLine.className = 'frasi-it-line';
+    itLine.textContent = (i+1) + '. ' + item.it;
+    itemDiv.appendChild(itLine);
+
+    var enLine = document.createElement('div'); enLine.className = 'frasi-en-line';
+    var parts = item.en.split('___');
+    enLine.appendChild(document.createTextNode(parts[0]));
+    var blankSpan = document.createElement('span'); blankSpan.className = 'frasi-inline-blank';
+    enLine.appendChild(blankSpan);
+    enLine.appendChild(document.createTextNode(parts[1] !== undefined ? parts[1] : ''));
+    itemDiv.appendChild(enLine);
+
+    var bankDiv = document.createElement('div'); bankDiv.className = 'frasi-bank';
+    for (b=0; b<bank.length; b++) {
+      var btile = document.createElement('span'); btile.className = 'sentence-tile'; btile.textContent = bank[b];
+      bankDiv.appendChild(btile);
+    }
+    itemDiv.appendChild(bankDiv);
+
+    container.appendChild(itemDiv);
+  }
+
+  var card = makeCard('Frasi da completare IT-EN', 'Leggi la frase in italiano, poi scegli dalla banca la parola inglese giusta per completare la frase!', name);
+  var wrap = makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var keyParts = [];
+  for (i=0; i<selected.length; i++) keyParts.push((i+1) + ') ' + selected[i].en.replace('___', selected[i].answer.toUpperCase()));
+  var key = document.createElement('div'); key.className = 'answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card, 'frasien');
   area.appendChild(card);
 }
 
