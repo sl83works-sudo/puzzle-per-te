@@ -156,6 +156,38 @@ canvas { display: block; border-radius: 8px; border: 1.5px solid var(--c-border)
 .frasi-inline-blank { display: inline-block; width: 70px; border-bottom: 2px solid var(--c-text); height: 1em; vertical-align: middle; margin: 0 4px; }
 .frasi-bank { display: flex; gap: 8px; flex-wrap: wrap; }
 
+/* SEQUENZE NUMERICHE */
+.numseq-list { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 640px; }
+.numseq-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.numseq-number { font-size: 0.8rem; color: var(--c-muted); font-weight: 700; margin-right: 2px; }
+.numseq-item { min-width: 44px; height: 44px; padding: 0 6px; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka One', cursive; font-size: 1.1rem; border: 2px solid var(--c-border); border-radius: 8px; background: #fafafa; color: var(--c-text); }
+.numseq-item.blank { border-style: dashed; background: white; color: var(--c-purple); }
+
+/* RICONOSCI L'EMOZIONE */
+.emotion-list { display: flex; flex-direction: column; gap: 22px; }
+.emotion-round { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.emotion-target { font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--c-purple); }
+.emotion-options { display: flex; gap: 14px; }
+.emotion-option { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid var(--c-border); border-radius: 12px; background: #fafafa; }
+
+/* LINEA DEL TEMPO */
+.timeline-list { display: flex; flex-direction: column; gap: 26px; width: 100%; }
+.timeline-block { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.timeline-title { font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--c-purple); }
+.timeline-tiles { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.timeline-tile { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.timeline-tile-text { padding: 8px 12px; border: 2px solid var(--c-border); border-radius: 8px; background: #fafafa; font-weight: 700; font-size: 0.85rem; text-align: center; max-width: 130px; }
+.timeline-numbox { width: 32px; height: 32px; border: 2px solid var(--c-text); border-radius: 6px; background: white; }
+
+/* SEGUI LE ISTRUZIONI */
+.instr-grid { display: inline-grid; gap: 2px; background: var(--c-border); border: 2px solid var(--c-text); border-radius: 6px; padding: 2px; }
+.instr-cell { background: white; display: flex; align-items: center; justify-content: center; }
+.instr-cell.start { background: #e3f7ec; }
+.instr-start-label { font-family: 'Fredoka One', cursive; font-weight: 700; color: #2f8b5c; }
+.instr-commands { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+.instr-cmd { display: flex; align-items: center; gap: 4px; padding: 5px 10px; border: 2px solid var(--c-border); border-radius: 20px; background: #fafafa; font-weight: 700; font-size: 0.85rem; }
+.instr-cmd-num { color: var(--c-muted); font-size: 0.75rem; }
+
 /* SINONIMI E CONTRARI */
 .synant-columns { display: flex; justify-content: space-between; gap: 60px; width: 100%; max-width: 520px; margin: 0 auto; }
 .synant-col { display: flex; flex-direction: column; gap: 16px; flex: 1; }
