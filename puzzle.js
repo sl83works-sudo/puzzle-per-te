@@ -49,6 +49,11 @@ function generate() {
   else if (currentType === 'anagramen') generateAnagrammiEN(area, diff, name);
   else if (currentType === 'missingletteren') generateLetteraMancanteEN(area, diff, name);
   else if (currentType === 'frasien') generateFrasiITEN(area, diff, name);
+  else if (currentType === 'numseq') generateSequenzeNumeriche(area, diff, name);
+  else if (currentType === 'flags') generateBandiereCapitali(area, diff, name);
+  else if (currentType === 'emotion') generateRiconosciEmozione(area, diff, name);
+  else if (currentType === 'timeline') generateLineaDelTempo(area, diff, name);
+  else if (currentType === 'followinstr') generateSegueIstruzioni(area, diff, name);
 }
 
 function makeCard(title, subtitle, name) {
@@ -88,7 +93,12 @@ var parentGuides = {
   vocaben: 'Prima scheda di inglese dell\'app: il bambino collega ogni parola italiana (con la sua emoji) alla traduzione inglese corretta. Leggete le parole inglesi ad alta voce insieme a lui: la pronuncia inglese spesso non corrisponde a come la parola è scritta, quindi sentirla è importante quanto vederla scritta. Per le fasce più grandi alcune emoji rappresentano concetti astratti (es. 🕊️ per "libertà") in modo simbolico, non letterale — è un\'occasione per parlare del significato della parola insieme, non solo per tradurla meccanicamente.',
   anagramen: 'Come Anagrammi in italiano, ma con parole inglesi: il bambino riordina le lettere mescolate per ricostruire la parola. La traduzione italiana è sempre mostrata come aiuto, perché senza sapere quale parola si sta cercando indovinare l\'ordine delle lettere in una lingua straniera è quasi impossibile. Fate provare il bambino a pronunciare la parola inglese una volta ricostruita: la scrittura e la pronuncia inglese spesso non coincidono, ed è un\'occasione in più per allenare l\'orecchio.',
   missingletteren: 'Come Lettera mancante in italiano, ma con parole inglesi: il bambino completa le lettere mancanti mantenendo l\'ordine corretto. La traduzione italiana è sempre mostrata, perché il richiamo ortografico in una lingua straniera richiede un aggancio al significato — a differenza dell\'italiano, dove il bambino può spesso affidarsi al suono della parola.',
-  frasien: 'Questa scheda allena la traduzione in contesto: il bambino legge la frase in italiano, poi sceglie dalla banca di 3 parole quella inglese giusta per completare la frase corrispondente. A differenza del semplice abbinamento parola-parola, qui la parola va capita all\'interno di una frase intera — un passo più vicino all\'uso reale della lingua. Se il bambino esita tra due opzioni plausibili, fatelo tradurre l\'intera frase italiana ad alta voce prima di scegliere: spesso il significato della frase intera scioglie il dubbio.'
+  frasien: 'Questa scheda allena la traduzione in contesto: il bambino legge la frase in italiano, poi sceglie dalla banca di 3 parole quella inglese giusta per completare la frase corrispondente. A differenza del semplice abbinamento parola-parola, qui la parola va capita all\'interno di una frase intera — un passo più vicino all\'uso reale della lingua. Se il bambino esita tra due opzioni plausibili, fatelo tradurre l\'intera frase italiana ad alta voce prima di scegliere: spesso il significato della frase intera scioglie il dubbio.',
+  numseq: 'Questa scheda allena il ragionamento matematico, non il calcolo puro: il bambino deve scoprire la regola nascosta di ogni sequenza (aggiungere sempre lo stesso numero, moltiplicare, alternare...) prima di poter completare i numeri mancanti. Se si blocca, fatelo concentrare sulla differenza tra una coppia di numeri consecutivi già visibili invece che sull\'intera sequenza tutta insieme: spesso basta isolare "quanto cambia da un numero al successivo" per sbloccare il resto.',
+  flags: 'Questa scheda allena la geografia in modo ludico. Per i più piccoli l\'esercizio collega la bandiera al nome del paese; dai 6 anni in su collega invece il paese alla sua capitale, un concetto più astratto. Un mappamondo o un planisfero accanto al bambino, anche solo su uno schermo, rende l\'esercizio molto più concreto: vedere dove si trova un paese aiuta a memorizzarne il nome più di quanto non faccia la sola associazione testuale.',
+  emotion: 'Questa scheda allena il vocabolario delle emozioni, una base importante dell\'intelligenza emotiva: il bambino deve riconoscere quale faccina esprime l\'emozione indicata tra alcune opzioni simili. Fatelo provare a imitare lui stesso l\'espressione richiesta davanti a uno specchio prima di cerchiare la risposta: il rinforzo fisico/kinestetico aiuta a fissare il legame tra la parola e il vissuto emotivo, non solo tra la parola e l\'immagine.',
+  timeline: 'Questa scheda allena il ragionamento sequenziale e causale: il bambino deve riordinare delle tappe mescolate scrivendo il numero corretto sotto ciascuna. Per le fasce più piccole sono cicli naturali concreti (la crescita di una farfalla, le stagioni); per quelle più grandi sono processi storici o tecnologici. Se il bambino fatica, fatelo partire dagli estremi che riconosce con più sicurezza (il primo e l\'ultimo passo) e poi riempire il centro, invece di procedere rigidamente da sinistra a destra.',
+  followinstr: 'Questa scheda introduce il pensiero computazionale in modo giocoso: il bambino deve eseguire una sequenza di comandi direzionali (su, giù, sinistra, destra) partendo dal pallino verde, disegnando il percorso passo per passo sulla griglia. È essenzialmente programmazione "a mano": ogni comando va eseguito nell\'ordine esatto, uno alla volta, senza saltarne o anticiparne nessuno. Se il bambino sbaglia strada, fatelo ripartire dall\'ultimo comando eseguito correttamente invece che dall\'inizio: aiuta a isolare dove si è verificato l\'errore.'
 };
 
 function showGuide(type) {
@@ -2106,6 +2116,427 @@ function generateFrasiITEN(area, diff, name) {
   card.appendChild(key);
 
   addGuideBtn(card, 'frasien');
+  area.appendChild(card);
+}
+
+/* ==================== SEQUENZE NUMERICHE ====================
+   Fonti di variabilita': (1) generativa pura, ogni sequenza calcolata
+   da una formula parametrica; (2) pool di 6 famiglie di regola
+   qualitativamente diverse (aritmetica crescente/decrescente,
+   geometrica, alternata, Fibonacci, quadrati), scalate per fascia;
+   (3) parametri (passo, rapporto, punto di partenza) randomizzati.
+   Tutti i rami sono costruiti per non produrre mai numeri negativi
+   (margine di sicurezza calcolato analiticamente, non per tentativi). */
+function numseqGenerateOne(diff, length) {
+  var rulePool;
+  if (diff === 'explorer') rulePool = ['arith_asc'];
+  else if (diff === 'curious') rulePool = ['arith_asc','arith_desc'];
+  else if (diff === 'growing') rulePool = ['arith_asc','arith_desc','geometric'];
+  else rulePool = ['arith_asc','arith_desc','geometric','alternating','fibonacci','squares'];
+
+  var rule = rulePool[Math.floor(rng()*rulePool.length)];
+  var terms, i;
+  if (rule === 'arith_asc') {
+    var sr = { explorer:[1,3], curious:[2,6], growing:[3,10], challenge:[3,12] }[diff] || [2,6];
+    var step = sr[0] + Math.floor(rng()*(sr[1]-sr[0]+1));
+    var start = 1 + Math.floor(rng()*15);
+    terms = []; for (i=0;i<length;i++) terms.push(start + i*step);
+  } else if (rule === 'arith_desc') {
+    var sr2 = { curious:[2,6], growing:[3,10], challenge:[3,12] }[diff] || [2,6];
+    var step2 = sr2[0] + Math.floor(rng()*(sr2[1]-sr2[0]+1));
+    var maxDrop = step2*(length-1);
+    var start2 = maxDrop + 5 + Math.floor(rng()*20);
+    terms = []; for (i=0;i<length;i++) terms.push(start2 - i*step2);
+  } else if (rule === 'geometric') {
+    var ratio = [2,3][Math.floor(rng()*2)];
+    var start3 = 1 + Math.floor(rng()*5);
+    terms = []; var v=start3; for (i=0;i<length;i++){ terms.push(v); v=v*ratio; }
+  } else if (rule === 'alternating') {
+    var a = 2+Math.floor(rng()*6), b = 1+Math.floor(rng()*4);
+    var start4 = (a+b)*length + 5;
+    terms = [start4]; var v4=start4;
+    for (i=1;i<length;i++){ v4 = (i%2===1) ? v4+a : v4-b; terms.push(v4); }
+  } else if (rule === 'fibonacci') {
+    var a5=1+Math.floor(rng()*5), b5=1+Math.floor(rng()*5);
+    terms=[a5,b5];
+    for (i=2;i<length;i++) terms.push(terms[i-1]+terms[i-2]);
+  } else {
+    var startIdx = 1+Math.floor(rng()*3);
+    terms=[]; for (i=0;i<length;i++) terms.push((startIdx+i)*(startIdx+i));
+  }
+  return terms;
+}
+
+function generateSequenzeNumeriche(area, diff, name) {
+  var length = { explorer:6, curious:6, growing:6, challenge:7 }[diff] || 6;
+  var count = { explorer:6, curious:6, growing:5, challenge:5 }[diff] || 6;
+  var numBlanks = { explorer:1, curious:1, growing:2, challenge:2 }[diff] || 1;
+
+  var container = document.createElement('div'); container.className='numseq-list';
+  var solutions = [], p, ti, idx, bi;
+  for (p=0; p<count; p++) {
+    var terms = numseqGenerateOne(diff, length);
+    solutions.push(terms.slice());
+
+    var candidatePositions = [];
+    for (idx=1; idx<length; idx++) candidatePositions.push(idx);
+    candidatePositions.sort(function(){ return rng()-0.5; });
+    var blankPositions = candidatePositions.slice(0, Math.min(numBlanks, candidatePositions.length));
+    var blankSet = {};
+    for (bi=0; bi<blankPositions.length; bi++) blankSet[blankPositions[bi]] = true;
+
+    var row = document.createElement('div'); row.className='numseq-row';
+    var label = document.createElement('span'); label.className='numseq-number'; label.textContent=(p+1)+'.';
+    row.appendChild(label);
+    for (ti=0; ti<terms.length; ti++) {
+      var item = document.createElement('div'); item.className='numseq-item';
+      if (blankSet[ti]) { item.className += ' blank'; }
+      else { item.textContent = terms[ti]; }
+      row.appendChild(item);
+    }
+    container.appendChild(row);
+  }
+
+  var card = makeCard('Sequenze numeriche', 'Scopri la regola nascosta e completa i numeri mancanti!', name);
+  var wrap = makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var keyParts=[];
+  for (p=0; p<solutions.length; p++) keyParts.push((p+1)+') '+solutions[p].join(', '));
+  var key = document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card, 'numseq');
+  area.appendChild(card);
+}
+
+/* ==================== BANDIERE E CAPITALI ====================
+   Riusa il layout a due colonne (.synant-*). Fascia explorer: bandiera
+   -> nome del paese (concetto piu' intuitivo). Fasce successive: paese
+   -> capitale. Stesso schema di derangement delle altre schede a due
+   colonne. */
+var FLAG_VOCAB = {
+  explorer: [
+    {country:'ITALIA', capital:'ROMA', flag:'🇮🇹'}, {country:'FRANCIA', capital:'PARIGI', flag:'🇫🇷'},
+    {country:'SPAGNA', capital:'MADRID', flag:'🇪🇸'}, {country:'GERMANIA', capital:'BERLINO', flag:'🇩🇪'},
+    {country:'STATI UNITI', capital:'WASHINGTON', flag:'🇺🇸'}, {country:'GIAPPONE', capital:'TOKYO', flag:'🇯🇵'},
+    {country:'BRASILE', capital:'BRASILIA', flag:'🇧🇷'}, {country:'REGNO UNITO', capital:'LONDRA', flag:'🇬🇧'},
+    {country:'CINA', capital:'PECHINO', flag:'🇨🇳'}, {country:'CANADA', capital:'OTTAWA', flag:'🇨🇦'},
+    {country:'MESSICO', capital:'CITTA\' DEL MESSICO', flag:'🇲🇽'}, {country:'AUSTRALIA', capital:'CANBERRA', flag:'🇦🇺'}
+  ],
+  curious: [
+    {country:'ITALIA', capital:'ROMA', flag:'🇮🇹'}, {country:'FRANCIA', capital:'PARIGI', flag:'🇫🇷'},
+    {country:'SPAGNA', capital:'MADRID', flag:'🇪🇸'}, {country:'GERMANIA', capital:'BERLINO', flag:'🇩🇪'},
+    {country:'REGNO UNITO', capital:'LONDRA', flag:'🇬🇧'}, {country:'GIAPPONE', capital:'TOKYO', flag:'🇯🇵'},
+    {country:'STATI UNITI', capital:'WASHINGTON', flag:'🇺🇸'}, {country:'RUSSIA', capital:'MOSCA', flag:'🇷🇺'},
+    {country:'CINA', capital:'PECHINO', flag:'🇨🇳'}, {country:'CANADA', capital:'OTTAWA', flag:'🇨🇦'},
+    {country:'BRASILE', capital:'BRASILIA', flag:'🇧🇷'}, {country:'GRECIA', capital:'ATENE', flag:'🇬🇷'}
+  ],
+  growing: [
+    {country:'PORTOGALLO', capital:'LISBONA', flag:'🇵🇹'}, {country:'PAESI BASSI', capital:'AMSTERDAM', flag:'🇳🇱'},
+    {country:'SVIZZERA', capital:'BERNA', flag:'🇨🇭'}, {country:'AUSTRIA', capital:'VIENNA', flag:'🇦🇹'},
+    {country:'POLONIA', capital:'VARSAVIA', flag:'🇵🇱'}, {country:'SVEZIA', capital:'STOCCOLMA', flag:'🇸🇪'},
+    {country:'NORVEGIA', capital:'OSLO', flag:'🇳🇴'}, {country:'EGITTO', capital:'IL CAIRO', flag:'🇪🇬'},
+    {country:'INDIA', capital:'NUOVA DELHI', flag:'🇮🇳'}, {country:'ARGENTINA', capital:'BUENOS AIRES', flag:'🇦🇷'},
+    {country:'SUDAFRICA', capital:'PRETORIA', flag:'🇿🇦'}, {country:'TURCHIA', capital:'ANKARA', flag:'🇹🇷'}
+  ],
+  challenge: [
+    {country:'FINLANDIA', capital:'HELSINKI', flag:'🇫🇮'}, {country:'DANIMARCA', capital:'COPENAGHEN', flag:'🇩🇰'},
+    {country:'IRLANDA', capital:'DUBLINO', flag:'🇮🇪'}, {country:'UNGHERIA', capital:'BUDAPEST', flag:'🇭🇺'},
+    {country:'REPUBBLICA CECA', capital:'PRAGA', flag:'🇨🇿'}, {country:'COREA DEL SUD', capital:'SEUL', flag:'🇰🇷'},
+    {country:'THAILANDIA', capital:'BANGKOK', flag:'🇹🇭'}, {country:'INDONESIA', capital:'JAKARTA', flag:'🇮🇩'},
+    {country:'NUOVA ZELANDA', capital:'WELLINGTON', flag:'🇳🇿'}, {country:'KENYA', capital:'NAIROBI', flag:'🇰🇪'},
+    {country:'CILE', capital:'SANTIAGO', flag:'🇨🇱'}, {country:'MAROCCO', capital:'RABAT', flag:'🇲🇦'}
+  ]
+};
+
+function generateBandiereCapitali(area, diff, name) {
+  var pool = (FLAG_VOCAB[diff] || FLAG_VOCAB.curious).slice().sort(function(){ return rng()-0.5; });
+  var count = Math.min({ explorer:6, curious:7, growing:7, challenge:8 }[diff] || 7, pool.length);
+  var selected = pool.slice(0, count);
+  var isExplorer = diff === 'explorer';
+
+  var items=[], i;
+  for (i=0;i<selected.length;i++) items.push({ letter:String.fromCharCode(65+i), flag:selected[i].flag, country:selected[i].country, capital:selected[i].capital });
+
+  var rightOrder, tries=0, hasFixedPoint;
+  do {
+    rightOrder = items.slice().sort(function(){ return rng()-0.5; });
+    hasFixedPoint = false;
+    for (i=0;i<rightOrder.length;i++){ if (rightOrder[i]===items[i]){ hasFixedPoint=true; break; } }
+    tries++;
+  } while (hasFixedPoint && tries<30);
+
+  var wrapDiv=document.createElement('div'); wrapDiv.className='synant-columns';
+  var colLeft=document.createElement('div'); colLeft.className='synant-col left';
+  for (i=0;i<items.length;i++){
+    var rowL=document.createElement('div'); rowL.className='synant-item';
+    var tagL=document.createElement('span'); tagL.className='synant-tag'; tagL.textContent=items[i].letter+'.';
+    var emojiL=document.createElement('span'); emojiL.style.fontSize='1.3rem'; emojiL.textContent=items[i].flag;
+    rowL.appendChild(tagL); rowL.appendChild(emojiL);
+    if (!isExplorer) {
+      var textL=document.createElement('span'); textL.textContent=items[i].country;
+      rowL.appendChild(textL);
+    }
+    var dotL=document.createElement('div'); dotL.className='synant-dot';
+    rowL.appendChild(dotL);
+    colLeft.appendChild(rowL);
+  }
+  var colRight=document.createElement('div'); colRight.className='synant-col right';
+  for (i=0;i<rightOrder.length;i++){
+    var rowR=document.createElement('div'); rowR.className='synant-item';
+    var dotR=document.createElement('div'); dotR.className='synant-dot';
+    var textR=document.createElement('span'); textR.textContent = isExplorer ? rightOrder[i].country : rightOrder[i].capital;
+    rowR.appendChild(dotR); rowR.appendChild(textR);
+    colRight.appendChild(rowR);
+  }
+  wrapDiv.appendChild(colLeft); wrapDiv.appendChild(colRight);
+
+  var subtitle = isExplorer ? 'Collega ogni bandiera al nome del suo paese!' : 'Collega ogni paese alla sua capitale!';
+  var card = makeCard('Bandiere e Capitali', subtitle, name);
+  var wrap = makePrintWrap(); wrap.inner.appendChild(wrapDiv); card.appendChild(wrap.outer);
+
+  var keyParts=[];
+  for (i=0;i<items.length;i++) keyParts.push(items[i].letter + ') ' + items[i].country + (isExplorer ? '' : ' → ' + items[i].capital));
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card, 'flags');
+  area.appendChild(card);
+}
+
+/* ==================== RICONOSCI L'EMOZIONE ====================
+   Meccanismo diverso dalle altre schede linguistiche (scelta multipla
+   invece di collega-le-colonne, per varieta' visiva): per ogni round
+   il bambino cerchia, tra 4 faccine, quella che esprime l'emozione
+   indicata. Fascia explorer/curious: solo le 6 emozioni di base.
+   growing/challenge: pool completo di 14, incluse emozioni piu'
+   sfumate. */
+var EMOTION_VOCAB = [
+  {name:'FELICE', emoji:'😊'}, {name:'TRISTE', emoji:'😢'}, {name:'ARRABBIATO', emoji:'😠'},
+  {name:'SORPRESO', emoji:'😲'}, {name:'SPAVENTATO', emoji:'😨'}, {name:'ASSONNATO', emoji:'😴'},
+  {name:'ANNOIATO', emoji:'😑'}, {name:'CONFUSO', emoji:'😕'}, {name:'ORGOGLIOSO', emoji:'😌'},
+  {name:'IMBARAZZATO', emoji:'😳'}, {name:'INNAMORATO', emoji:'😍'}, {name:'PREOCCUPATO', emoji:'😟'},
+  {name:'DIVERTITO', emoji:'😂'}, {name:'DELUSO', emoji:'😞'}
+];
+
+function generateRiconosciEmozione(area, diff, name) {
+  var basicNames = ['FELICE','TRISTE','ARRABBIATO','SORPRESO','SPAVENTATO','ASSONNATO'];
+  var fullPool = (diff==='explorer' || diff==='curious')
+    ? EMOTION_VOCAB.filter(function(e){ return basicNames.indexOf(e.name)!==-1; })
+    : EMOTION_VOCAB.slice();
+
+  var rounds = Math.min({ explorer:4, curious:5, growing:6, challenge:6 }[diff] || 5, fullPool.length);
+  var targets = fullPool.slice().sort(function(){ return rng()-0.5; }).slice(0, rounds);
+
+  var container = document.createElement('div'); container.className='emotion-list';
+  var keyParts=[], i, j;
+  for (i=0;i<targets.length;i++){
+    var target = targets[i];
+    var others = fullPool.filter(function(e){ return e.name!==target.name; });
+    others = others.slice().sort(function(){ return rng()-0.5; });
+    var distractors = others.slice(0, Math.min(3, others.length));
+    var options = [target].concat(distractors);
+    options.sort(function(){ return rng()-0.5; });
+
+    var round=document.createElement('div'); round.className='emotion-round';
+    var targetLabel=document.createElement('div'); targetLabel.className='emotion-target'; targetLabel.textContent=(i+1)+'. Trova: '+target.name;
+    round.appendChild(targetLabel);
+    var optsDiv=document.createElement('div'); optsDiv.className='emotion-options';
+    for (j=0;j<options.length;j++){
+      var opt=document.createElement('div'); opt.className='emotion-option'; opt.textContent=options[j].emoji;
+      optsDiv.appendChild(opt);
+    }
+    round.appendChild(optsDiv);
+    container.appendChild(round);
+
+    keyParts.push((i+1)+') '+target.name+' '+target.emoji);
+  }
+
+  var card = makeCard('Riconosci l\'emozione', 'Cerchia la faccina che esprime l\'emozione indicata!', name);
+  var wrap = makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card, 'emotion');
+  area.appendChild(card);
+}
+
+/* ==================== LINEA DEL TEMPO ====================
+   Variante di Ordina la frase a livello di "tappa" invece che di
+   parola: il bambino scrive il numero corretto (1,2,3...) sotto ogni
+   tappa mescolata invece di riscrivere tutto. Riusa scrambleSentence
+   (funzione generica di shuffle-finche'-diverso su array di stringhe,
+   gia' scritta per Ordina la frase — nessun nuovo helper necessario).
+   Fascia explorer/curious: cicli naturali concreti. growing/challenge:
+   processi storici/tecnologici, fatti generalmente noti e non
+   controversi. */
+var TIMELINE_VOCAB = {
+  explorer: [
+    {title:'Il ciclo di vita della farfalla', events:['Uovo','Bruco','Crisalide','Farfalla']},
+    {title:'Come cresce una pianta', events:['Seme','Germoglio','Pianta','Fiore']},
+    {title:'Le fasi della giornata', events:['Mattina','Pomeriggio','Sera','Notte']},
+    {title:'Le quattro stagioni', events:['Primavera','Estate','Autunno','Inverno']},
+    {title:'Il ciclo di vita della rana', events:['Uovo','Girino','Ranocchio','Rana']},
+    {title:'Prepararsi al mattino', events:['Svegliarsi','Lavarsi','Vestirsi','Fare colazione']}
+  ],
+  curious: [
+    {title:'Come si fa il pane', events:['Semina del grano','Raccolto','Macinazione','Impasto','Cottura']},
+    {title:'Il ciclo dell\'acqua', events:['Evaporazione','Formazione delle nuvole','Condensazione','Pioggia','Raccolta nei fiumi']},
+    {title:'La costruzione di una casa', events:['Fondamenta','Muri','Tetto','Finestre e porte','Finiture']},
+    {title:'La crescita di un albero', events:['Seme','Germoglio','Alberello','Albero giovane','Albero maturo']},
+    {title:'Preparare una torta', events:['Ingredienti','Impasto','Cottura in forno','Raffreddamento','Decorazione']},
+    {title:'Il percorso di una lettera', events:['Scrittura','Imbustamento','Consegna alla posta','Smistamento','Consegna al destinatario']}
+  ],
+  growing: [
+    {title:'Storia dei trasporti', events:['Cavallo','Carrozza','Treno a vapore','Automobile','Aereo']},
+    {title:'Evoluzione della comunicazione a distanza', events:['Piccioni viaggiatori','Telegrafo','Telefono','Televisione','Internet']},
+    {title:'Storia della scrittura', events:['Pittogrammi','Geroglifici','Alfabeto fenicio','Stampa a caratteri mobili','Computer']},
+    {title:'Il ciclo di vita di una stella come il Sole', events:['Nebulosa','Protostella','Stella adulta','Gigante rossa','Nana bianca']},
+    {title:'La rivoluzione industriale', events:['Agricoltura tradizionale','Macchina a vapore','Fabbriche','Ferrovie','Produzione di massa']},
+    {title:'Storia dell\'illuminazione', events:['Fuoco','Candele','Lampade a olio','Lampadina elettrica','LED']}
+  ],
+  challenge: [
+    {title:'Storia del volo umano', events:['Mongolfiera (1783)','Dirigibile','Primo aereo dei fratelli Wright (1903)','Aerei a reazione','Missione sulla Luna (1969)']},
+    {title:'Evoluzione dei computer', events:['Abaco','Calcolatrice meccanica','Primo computer elettronico','Personal computer','Smartphone']},
+    {title:'Storia di internet', events:['ARPANET (1969)','Invenzione dell\'email','World Wide Web (1991)','Social network','Internet mobile']},
+    {title:'Storia della fotografia', events:['Camera oscura','Prima fotografia permanente (1826)','Pellicola fotografica','Fotocamera digitale','Smartphone con fotocamera']},
+    {title:'Evoluzione della musica registrata', events:['Fonografo','Disco in vinile','Musicassetta','CD','Streaming digitale']},
+    {title:'Storia dell\'esplorazione spaziale', events:['Primo satellite artificiale (1957)','Primo uomo nello spazio (1961)','Sbarco sulla Luna (1969)','Stazione Spaziale Internazionale','Missioni su Marte']}
+  ]
+};
+
+function generateLineaDelTempo(area, diff, name) {
+  var pool = (TIMELINE_VOCAB[diff] || TIMELINE_VOCAB.curious).slice().sort(function(){ return rng()-0.5; });
+  var count = Math.min({ explorer:1, curious:2, growing:2, challenge:2 }[diff] || 2, pool.length);
+  var selected = pool.slice(0, count);
+
+  var container = document.createElement('div'); container.className='timeline-list';
+  var keyParts=[], bi, ei;
+  for (bi=0; bi<selected.length; bi++){
+    var theme = selected[bi];
+    var shuffledEvents = scrambleSentence(theme.events);
+
+    var block=document.createElement('div'); block.className='timeline-block';
+    var titleEl=document.createElement('div'); titleEl.className='timeline-title'; titleEl.textContent=theme.title;
+    block.appendChild(titleEl);
+
+    var tilesDiv=document.createElement('div'); tilesDiv.className='timeline-tiles';
+    for (ei=0; ei<shuffledEvents.length; ei++){
+      var tileWrap=document.createElement('div'); tileWrap.className='timeline-tile';
+      var tileText=document.createElement('div'); tileText.className='timeline-tile-text'; tileText.textContent=shuffledEvents[ei];
+      var numBox=document.createElement('div'); numBox.className='timeline-numbox';
+      tileWrap.appendChild(tileText); tileWrap.appendChild(numBox);
+      tilesDiv.appendChild(tileWrap);
+    }
+    block.appendChild(tilesDiv);
+    container.appendChild(block);
+
+    keyParts.push(theme.title + ': ' + theme.events.join(' → '));
+  }
+
+  var card = makeCard('Linea del tempo', 'Scrivi il numero giusto (1, 2, 3...) sotto ogni tappa per rimetterle in ordine cronologico!', name);
+  var wrap = makePrintWrap(); wrap.inner.appendChild(container); card.appendChild(wrap.outer);
+
+  var key=document.createElement('div'); key.className='answer-key';
+  key.textContent = 'Soluzioni per il genitore: ' + keyParts.join(' — ');
+  card.appendChild(key);
+
+  addGuideBtn(card, 'timeline');
+  area.appendChild(card);
+}
+
+/* ==================== SEGUI LE ISTRUZIONI ====================
+   Introduzione al pensiero computazionale: sequenza di comandi
+   direzionali da eseguire passo-passo su una griglia partendo dal
+   pallino verde. Il percorso e' generato per rejection sampling
+   (si scartano le sequenze che uscirebbero dalla griglia e se ne
+   genera un'altra) con un fallback deterministico di sicurezza mai
+   osservato necessario nei test. Anteprima soluzione in miniatura
+   (canvas, solo schermo) analoga a quella di Picross/v25. */
+function generateSegueIstruzioni(area, diff, name) {
+  var size = { explorer:4, curious:5, growing:6, challenge:7 }[diff] || 5;
+  var numCmd = { explorer:4, curious:5, growing:6, challenge:7 }[diff] || 5;
+  var cellPx = { explorer:44, curious:38, growing:34, challenge:30 }[diff] || 38;
+
+  var DIRS = [
+    {dir:'up', dr:-1, dc:0, icon:'⬆️', label:'Su'},
+    {dir:'down', dr:1, dc:0, icon:'⬇️', label:'Giù'},
+    {dir:'left', dr:0, dc:-1, icon:'⬅️', label:'Sinistra'},
+    {dir:'right', dr:0, dc:1, icon:'➡️', label:'Destra'}
+  ];
+
+  var startR, startC, commands, path, valid=false, attempts=0;
+  while (!valid && attempts<200) {
+    attempts++;
+    startR = 1 + Math.floor(rng()*(size-2));
+    startC = 1 + Math.floor(rng()*(size-2));
+    var r=startR, c=startC, p=[{r:r,c:c}], cmds=[], ok=true, k;
+    for (k=0;k<numCmd;k++){
+      var d = DIRS[Math.floor(rng()*DIRS.length)];
+      var nr=r+d.dr, nc=c+d.dc;
+      if (nr<0||nr>=size||nc<0||nc>=size){ ok=false; break; }
+      cmds.push(d); r=nr; c=nc; p.push({r:r,c:c});
+    }
+    if (ok) { valid=true; commands=cmds; path=p; }
+  }
+  if (!valid) {
+    startR=Math.floor(size/2); startC=0; path=[{r:startR,c:startC}]; commands=[];
+    var rr=startR, cc=startC, maxSteps=Math.min(numCmd, size-1), k2;
+    for (k2=0;k2<maxSteps;k2++){ cc++; commands.push(DIRS[3]); path.push({r:rr,c:cc}); }
+  }
+
+  var gridWrap=document.createElement('div');
+  var grid=document.createElement('div'); grid.className='instr-grid';
+  grid.style.gridTemplateColumns = 'repeat(' + size + ', ' + cellPx + 'px)';
+  var r2,c2;
+  for (r2=0;r2<size;r2++){
+    for (c2=0;c2<size;c2++){
+      var cell=document.createElement('div'); cell.className='instr-cell';
+      cell.style.width=cellPx+'px'; cell.style.height=cellPx+'px';
+      if (r2===startR && c2===startC) {
+        cell.className += ' start';
+        var lbl=document.createElement('span'); lbl.className='instr-start-label'; lbl.textContent='P';
+        cell.appendChild(lbl);
+      }
+      grid.appendChild(cell);
+    }
+  }
+  gridWrap.appendChild(grid);
+
+  var cmdsDiv=document.createElement('div'); cmdsDiv.className='instr-commands';
+  var ci;
+  for (ci=0; ci<commands.length; ci++){
+    var chip=document.createElement('div'); chip.className='instr-cmd';
+    var numSpan=document.createElement('span'); numSpan.className='instr-cmd-num'; numSpan.textContent=(ci+1)+'.';
+    var iconSpan=document.createElement('span'); iconSpan.textContent=commands[ci].icon;
+    var labelSpan=document.createElement('span'); labelSpan.textContent=commands[ci].label;
+    chip.appendChild(numSpan); chip.appendChild(iconSpan); chip.appendChild(labelSpan);
+    cmdsDiv.appendChild(chip);
+  }
+
+  var card = makeCard('Segui le istruzioni', 'Parti dal pallino verde ed esegui i comandi in ordine, segnando il percorso sulla griglia. Dove arrivi?', name);
+  var wrap = makePrintWrap(); wrap.inner.appendChild(gridWrap); wrap.inner.appendChild(cmdsDiv); card.appendChild(wrap.outer);
+
+  var mini=document.createElement('canvas'); var scale=10;
+  mini.width=size*scale; mini.height=size*scale;
+  var mctx=mini.getContext('2d');
+  mctx.fillStyle='#fffdf7'; mctx.fillRect(0,0,mini.width,mini.height);
+  var pi;
+  for (pi=0; pi<path.length; pi++){
+    mctx.fillStyle = pi===0 ? '#4caf7d' : (pi===path.length-1 ? '#e05f5f' : '#7c5cbf');
+    mctx.fillRect(path[pi].c*scale, path[pi].r*scale, scale, scale);
+  }
+  var key=document.createElement('div'); key.className='answer-key';
+  key.style.cssText='display:flex;align-items:center;gap:8px;';
+  var keyLabel=document.createElement('span'); keyLabel.textContent='Anteprima percorso e arrivo (solo per te, non compare in stampa):';
+  key.appendChild(keyLabel); key.appendChild(mini);
+  card.appendChild(key);
+
+  addGuideBtn(card, 'followinstr');
   area.appendChild(card);
 }
 
